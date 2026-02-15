@@ -1,0 +1,91 @@
+name: Reference Documentation
+description: Request a new reference doc or report an issue with an existing one
+labels: [documentation, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve the reference documentation.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Request Type
+      options:
+        - New reference document
+        - Update existing reference
+        - Inaccuracy / outdated info
+        - Missing coverage for a topic
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe what's needed or what's wrong.
+      placeholder: |
+        The reference for X doesn't cover Y...
+        Or: A new reference for Z would help with...
+    validations:
+      required: true
+
+  - type: input
+    id: file
+    attributes:
+      label: Affected File (if existing)
+      description: Path to the reference file, if applicable.
+      placeholder: references/example-reference.md
+
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources / References
+      description: Links to official docs, GitHub issues, or blog posts that support this request.
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Agent Environment (optional)
+
+        If this issue was discovered while using a specific model or IDE, let us know.
+
+  - type: dropdown
+    id: llm
+    attributes:
+      label: LLM / Model
+      description: Which AI model surfaced this issue? (optional)
+      options:
+        - Claude (Anthropic)
+        - GPT-4o / GPT-4.1 (OpenAI)
+        - Gemini (Google)
+        - Codex (OpenAI)
+        - Copilot (GitHub / OpenAI)
+        - Not applicable
+        - Other (specify in description)
+
+  - type: dropdown
+    id: ide
+    attributes:
+      label: IDE / Agent
+      description: Which IDE or agent tool were you using? (optional)
+      options:
+        - Cline
+        - Claude Code (CLI)
+        - Cursor
+        - Gemini CLI
+        - Kiro
+        - OpenAI Codex CLI
+        - Roo Code
+        - VS Code + GitHub Copilot
+        - Windsurf
+        - Not applicable
+        - Other (specify in description)
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

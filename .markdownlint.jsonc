@@ -1,0 +1,32 @@
+{
+  // Allow long lines in reference docs (tables, URLs, etc.)
+  "MD013": false,
+  // Allow duplicate headings in different files
+  "MD024": { "siblings_only": true },
+  // Allow trailing punctuation in headings (e.g., "What to Avoid?")
+  "MD026": false,
+  // Allow blank lines inside blockquotes (CAUTION callout pattern)
+  "MD028": false,
+  // Allow fenced code blocks without surrounding blank lines (common in reference docs)
+  "MD031": false,
+  // Allow lists without surrounding blank lines (common in reference docs)
+  "MD032": false,
+  // Allow inline HTML (badges, buttons, tables)
+  "MD033": false,
+  // Allow bare URLs
+  "MD034": false,
+  // Allow bold text used as pseudo-headings inside HTML tables
+  "MD036": false,
+  // Allow spaces inside code spans (e.g., `Bearer ` prefix with intentional trailing space)
+  "MD038": false,
+  // Allow fenced code blocks without a language tag
+  "MD040": false,
+  // Allow files that don't start with H1 (PR template starts with H2)
+  "MD041": false,
+  // Allow emphasis with asterisks (mixed style across docs)
+  "MD049": false,
+  // Disable table column count enforcement (pipes in code examples)
+  "MD056": false,
+  // Disable table column style enforcement (compact vs aligned)
+  "MD060": false
+}

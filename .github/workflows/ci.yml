@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: |
+            **/*.md
+            !research/**
+
+  yaml-lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Run yamllint
+        run: yamllint -d relaxed src/waf-rule-management/assets/
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: src/waf-rule-management/scripts
+          severity: warning
+
+  python-check:
+    name: Python Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile src/waf-rule-management/scripts/validate_rule.py
+          python -m py_compile src/waf-rule-management/scripts/lint_regex.py
+          python -m py_compile src/waf-rule-management/scripts/lint_crs_rule.py
+          python -m py_compile src/waf-rule-management/scripts/analyze_log.py
+          python -m py_compile src/waf-rule-management/scripts/openapi_to_rules.py
+          python -m py_compile src/waf-rule-management/scripts/generate_ftw_test.py
+          python -m py_compile src/waf-rule-management/scripts/generate_exclusion.py
+
+      - name: Check script --help flags
+        run: |
+          for script in src/waf-rule-management/scripts/*.py; do
+            echo "Checking $script --help ..."
+            python "$script" --help > /dev/null 2>&1 || echo "WARNING: $script --help failed"
+          done

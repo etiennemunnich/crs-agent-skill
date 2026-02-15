@@ -1,0 +1,11 @@
+research/
+node_modules/
+.git/
+.cursor/
+.claude/
+.cline/
+.kiro/
+.roo/
+.windsurf/
+.agents/
+.vscode/

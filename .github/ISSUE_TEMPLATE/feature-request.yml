@@ -1,0 +1,93 @@
+name: Feature Request
+description: Suggest a new feature, script, or capability
+labels: [enhancement, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for improving the skill? We'd love to hear it.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What kind of feature is this?
+      options:
+        - New script / tool
+        - Skill capability (new workflow)
+        - Agent platform support
+        - Docker / test environment
+        - CI/CD integration
+        - MCP server integration
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the feature and why it would be useful.
+      placeholder: |
+        As a [developer/admin/security engineer], I want to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any workarounds or alternative approaches you've thought about?
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Agent Environment (optional)
+
+        If this request is specific to a particular model or IDE, let us know.
+
+  - type: dropdown
+    id: llm
+    attributes:
+      label: LLM / Model
+      description: Which AI model are you using? (optional)
+      options:
+        - Claude (Anthropic)
+        - GPT-4o / GPT-4.1 (OpenAI)
+        - Gemini (Google)
+        - Codex (OpenAI)
+        - Copilot (GitHub / OpenAI)
+        - Not applicable
+        - Other (specify in description)
+
+  - type: dropdown
+    id: ide
+    attributes:
+      label: IDE / Agent
+      description: Which IDE or agent tool are you using? (optional)
+      options:
+        - Cline
+        - Claude Code (CLI)
+        - Cursor
+        - Gemini CLI
+        - Kiro
+        - OpenAI Codex CLI
+        - Roo Code
+        - VS Code + GitHub Copilot
+        - Windsurf
+        - Not applicable
+        - Other (specify in description)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or links.
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

@@ -1,0 +1,133 @@
+name: Bug Report
+description: Report a bug in a script, reference doc, or skill behavior
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the details below.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the skill is affected?
+      options:
+        - Script (validate_rule.py, lint_regex.py, etc.)
+        - Reference documentation
+        - Docker / test environment
+        - SKILL.md / skill routing
+        - Installation (install_tools.sh)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear description of what went wrong.
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide the exact steps to reproduce the issue.
+      placeholder: |
+        1. Run `python scripts/validate_rule.py rule.conf`
+        2. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Agent Environment
+
+        Help us reproduce the issue by telling us which AI model and IDE you used.
+
+  - type: dropdown
+    id: llm
+    attributes:
+      label: LLM / Model
+      description: Which AI model were you using?
+      options:
+        - Claude (Anthropic)
+        - GPT-4o / GPT-4.1 (OpenAI)
+        - Gemini (Google)
+        - Codex (OpenAI)
+        - Copilot (GitHub / OpenAI)
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: input
+    id: llm-version
+    attributes:
+      label: LLM / Model Version
+      description: Specific model version if known (e.g., Claude 4 Sonnet, GPT-4.1, Gemini 2.5 Pro).
+      placeholder: e.g., Claude 4 Sonnet, GPT-4.1-mini
+
+  - type: dropdown
+    id: ide
+    attributes:
+      label: IDE / Agent
+      description: Which IDE or agent tool were you using?
+      options:
+        - Cline
+        - Claude Code (CLI)
+        - Cursor
+        - Gemini CLI
+        - Kiro
+        - OpenAI Codex CLI
+        - Roo Code
+        - VS Code + GitHub Copilot
+        - Windsurf
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: input
+    id: ide-version
+    attributes:
+      label: IDE / Agent Version
+      description: Version number of the IDE or agent tool.
+      placeholder: e.g., Cursor 0.48, Claude Code 1.24, VS Code 1.98
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: System Environment
+      description: Include OS, Python, Docker, and tool versions.
+      placeholder: |
+        - OS: macOS 15 / Ubuntu 24.04
+        - Python: 3.12
+        - Docker/Finch: Docker 27.x
+        - go-ftw: v2.x
+      render: markdown
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Output
+      description: Paste any relevant error output or logs.
+      render: shell
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

@@ -1,0 +1,8 @@
+# go-ftw configuration for the CRS + Albedo test environment.
+# Place this file in your working directory or pass --config path/to/.ftw.yaml.
+# See: https://github.com/coreruleset/go-ftw
+testoverride:
+  input:
+    dest_addr: "localhost"
+    port: 8080
+    protocol: "http"

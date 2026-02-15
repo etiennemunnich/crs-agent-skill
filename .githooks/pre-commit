@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Pre-commit hook — runs lint checks before allowing a commit.
+# Install: git config core.hooksPath .githooks
+set -euo pipefail
+
+echo "Running pre-commit checks..."
+bash scripts/lint.sh

@@ -1,0 +1,35 @@
+# Coraza + CRS + Albedo test environment for go-ftw
+# Uses Coraza WAF (Caddy) instead of ModSecurity. For Coraza-specific testing.
+# See: https://github.com/coreruleset/coraza-crs-docker
+
+services:
+  albedo:
+    container_name: crs-albedo
+    image: ghcr.io/coreruleset/albedo:0.3.0
+    command: ["--port", "80"]
+    networks:
+      - crs-test
+
+  coraza-crs:
+    container_name: crs-coraza
+    image: ghcr.io/coreruleset/coraza-crs:caddy-alpine
+    ports:
+      - "8080:8080"
+    environment:
+      BACKEND: albedo:80
+      PORT: "8080"
+      # ── Tuning (review before use — see .env.example) ──
+      PARANOIA: ${PARANOIA:-1}
+      BLOCKING_PARANOIA: ${BLOCKING_PARANOIA:-1}
+      ANOMALY_INBOUND: ${ANOMALY_INBOUND:-5}
+      ANOMALY_OUTBOUND: ${ANOMALY_OUTBOUND:-4}
+    volumes:
+      - ./custom-rules.conf:/opt/coraza/rules.d/custom-rules.conf:ro
+    depends_on:
+      - albedo
+    networks:
+      - crs-test
+
+networks:
+  crs-test:
+    driver: bridge

@@ -1,0 +1,76 @@
+research/
+
+# macOS
+.DS_Store
+
+# IDEs and editors
+.idea/
+.vscode/
+
+# Agent skill directories (created by consumers installing this skill)
+.agents/
+.claude/
+.cline/
+.clinerules/
+.copilot/
+.cursor/
+.gemini/
+.kiro/
+.roo/
+.windsurf/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Logs and temp
+*.log
+*.tmp
+*.temp
+/tmp/
+/temp/
+
+# Local overrides
+.env
+.env.local
+*.local
+
+# Docker
+.docker/
+
+# Incident workspaces — excluded entirely (sensitive probe data, audit logs, creds)
+**/incidents/

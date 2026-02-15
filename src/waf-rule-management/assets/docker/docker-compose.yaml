@@ -1,0 +1,44 @@
+# CRS + Albedo test environment for go-ftw
+# WAF (CRS) proxies to Albedo backend. go-ftw sends requests to WAF.
+# See: https://github.com/coreruleset/albedo
+#
+# Custom rules workflow (for first-responder and multi-incident use):
+#   1. Place .conf files in ./incidents.d/ (one per incident, e.g. CVE-2025-55182.conf)
+#   2. Run: cat incidents.d/*.conf > custom-rules.conf   (or use scripts/assemble_rules.sh)
+#   3. docker compose up -d  (or finch compose up -d)
+#
+# Each incident keeps its own .conf + tests/ + report in the incidents/ directory.
+# Only rules in custom-rules.conf are loaded by the WAF.
+
+services:
+  albedo:
+    container_name: crs-albedo
+    image: ghcr.io/coreruleset/albedo:0.3.0
+    command: ["--port", "80"]
+    networks:
+      - crs-test
+
+  crs:
+    container_name: crs-waf
+    image: owasp/modsecurity-crs:nginx
+    ports:
+      - "8080:8080"
+    environment:
+      BACKEND: http://albedo:80
+      # ── Tuning (review before use — see .env.example) ──
+      PARANOIA: ${PARANOIA:-1}
+      BLOCKING_PARANOIA: ${BLOCKING_PARANOIA:-1}
+      ANOMALY_INBOUND: ${ANOMALY_INBOUND:-5}
+      ANOMALY_OUTBOUND: ${ANOMALY_OUTBOUND:-4}
+    volumes:
+      # Assembled custom rules (from incidents.d/*.conf).
+      # The RESPONSE-999 prefix ensures loading after all standard CRS rules.
+      - ./custom-rules.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-CUSTOM-RULES.conf:ro
+    depends_on:
+      - albedo
+    networks:
+      - crs-test
+
+networks:
+  crs-test:
+    driver: bridge

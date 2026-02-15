@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"],
+      "_comment": "Browser automation for CRS Sandbox testing, WAF response inspection, and UI-driven debugging. See https://github.com/ChromeDevTools/chrome-devtools-mcp"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "_comment": "Up-to-date documentation for CVE, ModSecurity, CRS, Coraza, go-ftw, and crs-toolchain. See https://context7.com"
+    }
+  }
+}

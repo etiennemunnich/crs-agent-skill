@@ -1,0 +1,125 @@
+# Issue categories
+- name: bug
+  color: "d73a4a"
+  description: Something isn't working
+
+- name: enhancement
+  color: "a2eeef"
+  description: New feature or improvement
+
+- name: documentation
+  color: "0075ca"
+  description: Reference docs, README, or SKILL.md
+
+- name: script
+  color: "5319e7"
+  description: Python or Bash script changes
+
+# Triage and workflow
+- name: triage
+  color: "e4e669"
+  description: Needs initial review and categorization
+
+- name: good first issue
+  color: "7057ff"
+  description: Good for newcomers
+
+- name: help wanted
+  color: "008672"
+  description: Extra attention is needed
+
+# Scope
+- name: "scope: modsecurity"
+  color: "c5def5"
+  description: ModSecurity-specific
+
+- name: "scope: coraza"
+  color: "c5def5"
+  description: Coraza-specific
+
+- name: "scope: crs"
+  color: "c5def5"
+  description: OWASP CRS-specific
+
+- name: "scope: testing"
+  color: "c5def5"
+  description: go-ftw, Docker test env, CRS Sandbox
+
+- name: "scope: regex"
+  color: "c5def5"
+  description: Regex assembly, ReDoS, lint_regex
+
+- name: "scope: openapi"
+  color: "c5def5"
+  description: OpenAPI-to-WAF conversion
+
+- name: "scope: incident"
+  color: "c5def5"
+  description: Incident response workflows
+
+# Platform
+- name: "platform: cline"
+  color: "bfdadc"
+  description: Cline integration
+
+- name: "platform: claude-code"
+  color: "bfdadc"
+  description: Claude Code integration
+
+- name: "platform: codex"
+  color: "bfdadc"
+  description: OpenAI Codex CLI integration
+
+- name: "platform: copilot"
+  color: "bfdadc"
+  description: GitHub Copilot integration
+
+- name: "platform: cursor"
+  color: "bfdadc"
+  description: Cursor IDE integration
+
+- name: "platform: gemini"
+  color: "bfdadc"
+  description: Gemini CLI integration
+
+- name: "platform: kiro"
+  color: "bfdadc"
+  description: Kiro integration
+
+- name: "platform: roo-code"
+  color: "bfdadc"
+  description: Roo Code integration
+
+- name: "platform: windsurf"
+  color: "bfdadc"
+  description: Windsurf / Cascade integration
+
+# Priority
+- name: "priority: high"
+  color: "b60205"
+  description: High priority
+
+- name: "priority: low"
+  color: "c2e0c6"
+  description: Low priority
+
+# Status
+- name: stale
+  color: "ededed"
+  description: No recent activity
+
+- name: pinned
+  color: "006b75"
+  description: Exempt from stale bot
+
+- name: security
+  color: "ee0701"
+  description: Security-related issue
+
+- name: wontfix
+  color: "ffffff"
+  description: Will not be addressed
+
+- name: duplicate
+  color: "cfd3d7"
+  description: Duplicate of another issue

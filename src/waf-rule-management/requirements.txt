@@ -1,0 +1,3 @@
+# Python dependencies for WAF rule management scripts.
+# Install: python3 -m pip install -r requirements.txt
+pyyaml>=6.0

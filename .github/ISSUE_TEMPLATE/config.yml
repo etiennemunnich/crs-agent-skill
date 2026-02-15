@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: OWASP CRS Documentation
+    url: https://coreruleset.org/docs/
+    about: Official CRS documentation for rule writing, tuning, and deployment.
+  - name: CRS GitHub Discussions
+    url: https://github.com/coreruleset/coreruleset/discussions
+    about: Ask questions about CRS rules and configuration in the upstream project.
+  - name: OWASP Slack — #coreruleset
+    url: https://owasp.org/slack/invite
+    about: Real-time community chat for CRS and WAF topics.
