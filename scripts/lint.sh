@@ -58,6 +58,14 @@ for f in src/waf-rule-management/scripts/*.py; do
 done
 $help_ok && pass "All .py scripts support --help"
 
+# ── Agent Skill validation ────────────────────────────────────
+step "Agent Skill validation (skills-ref)"
+if command -v skills-ref &>/dev/null; then
+    skills-ref validate src/waf-rule-management && pass "skills-ref validate" || fail "skills-ref validate"
+else
+    fail "skills-ref not found (pip install 'git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref')"
+fi
+
 # ── Summary ────────────────────────────────────────────────────
 echo ""
 if [ "$FAILED" -eq 0 ]; then

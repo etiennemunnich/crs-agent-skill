@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml)
 [![Links](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml)
+[![Skill Validate](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml)
 [![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.4-8A2BE2)](https://agentskills.io)
 
 Agent skill for writing, validating, testing, and tuning **ModSecurity v3**, **Coraza**, and **OWASP Core Rule Set (CRS)** WAF rules using AI coding assistants.
