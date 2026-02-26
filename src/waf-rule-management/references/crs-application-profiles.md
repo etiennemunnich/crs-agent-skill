@@ -71,6 +71,51 @@ SecRule REQUEST_URI "@beginsWith /blog/" \
 | Encoded state in URL | 942xxx | Scope by path; decode before matching |
 | Preflight (OPTIONS) | 911xxx | Usually allowed; verify method enforcement rules |
 
+### NextJS + Coraza (Caddy)
+
+No built-in CRS exclusion package. Write targeted exclusions for session token cookies.
+
+| FP Trigger | Typical Rules | Exclusion Approach |
+|-----------|---------------|-------------------|
+| `__Secure-next-auth.session-token` cookie with base64-encoded PHP-like substrings (`fputs`, `fclose`) | 933150 | `ctl:ruleRemoveTargetById=933150;REQUEST_COOKIES:__Secure-next-auth.session-token` — use **literal** cookie name, not regex |
+| Same session token containing `.env` substring | 930120 | `ctl:ruleRemoveTargetById=930120;REQUEST_COOKIES:__Secure-next-auth.session-token` |
+| `Next-Action` or other framework-specific headers | 920xxx | `ctl:ruleRemoveTargetByTag=920;REQUEST_HEADERS:Next-Action` scoped to SPA paths |
+
+> **Warning**: Regex patterns in `ctl:ruleRemoveTargetById` silently fail. Always use the exact, literal cookie or parameter name.
+
+```apache
+# Example: NextJS session token exclusions (place BEFORE CRS include)
+SecRule REQUEST_URI "@beginsWith /" \
+    "id:100010,phase:1,pass,nolog,t:none,\
+    ctl:ruleRemoveTargetById=933150;REQUEST_COOKIES:__Secure-next-auth.session-token"
+
+SecRule REQUEST_URI "@beginsWith /" \
+    "id:100011,phase:1,pass,nolog,t:none,\
+    ctl:ruleRemoveTargetById=930120;REQUEST_COOKIES:__Secure-next-auth.session-token"
+```
+
+### Payload CMS (REST API)
+
+No built-in CRS exclusion package. Rule 932370 fires at PL1 on any JSON body containing URL fields.
+
+| FP Trigger | Typical Rules | Exclusion Approach |
+|-----------|---------------|-------------------|
+| `POST /admin/collections/*` JSON body with `{"url": "..."}` | 932370 (PL1) | `ctl:ruleRemoveById=932370` scoped to `/admin/collections` — **must use `ctl:ruleRemoveById`**, not `ctl:ruleRemoveTargetById` (chain rule) |
+| `POST /api/pages/*` or other REST endpoints with URL fields in JSON | 932370 (PL1) | `ctl:ruleRemoveById=932370` scoped to `/api/` |
+
+> **Note**: Rule 932370 is a chained rule. `ctl:ruleRemoveTargetById` does not propagate through chain links and will silently fail. Use `ctl:ruleRemoveById` scoped narrowly by URI.
+
+```apache
+# Example: Payload CMS REST API exclusions (place BEFORE CRS include)
+SecRule REQUEST_URI "@beginsWith /admin/collections" \
+    "id:100020,phase:1,pass,nolog,t:none,\
+    ctl:ruleRemoveById=932370"
+
+SecRule REQUEST_URI "@beginsWith /api/" \
+    "id:100021,phase:1,pass,nolog,t:none,\
+    ctl:ruleRemoveById=932370"
+```
+
 ### Legacy/Custom Applications
 
 | Pattern | Approach |

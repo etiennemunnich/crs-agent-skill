@@ -12,6 +12,21 @@ Goal: reduce false positives while preserving detection depth.
 - ModSecurity v3 directive/action details:
   <https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)>
 
+## Capture Configuration Context First
+
+Before analyzing or writing any exclusion, collect the following. Without this context, exclusion recommendations are speculative — the same rule ID fires for entirely different reasons depending on platform and paranoia level.
+
+| Field | What to capture |
+|-------|----------------|
+| **Paranoia level** | `blocking_paranoia_level` and `detection_paranoia_level` from `crs-setup.conf` |
+| **Engine + version** | ModSecurity v2/v3 or Coraza; WAF host (Apache, Nginx, Caddy) |
+| **CRS version** | e.g. `4.0.0`, `4.19.0` |
+| **Application / platform** | WordPress, NextJS, PrestaShop, Payload CMS, custom API, etc. |
+| **Triggering payload** | URI, HTTP method, relevant headers, body snippet, or cookie value that caused the match |
+| **Rule ID + matched variable** | From the audit or error log (e.g. `id:933150`, matched on `REQUEST_COOKIES:session-token`) |
+
+Ask the user for these details if they are not provided before proceeding.
+
 ## Standard Tuning Workflow
 
 1. Reproduce with controlled test traffic (same path, params, headers, body).

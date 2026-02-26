@@ -57,6 +57,9 @@ Do not silently accept antipatterns. Proactively steer toward best practices.
 | **Excluding entire rule when only one param triggers** | Loses protection for other inputs | Use ctl:ruleRemoveTargetById=ID;ARGS:param |
 | **No condition on exclusion** | Applies to all traffic | Add REQUEST_URI, REQUEST_METHOD, etc. |
 | **Exclusion in wrong file** | Won't take effect | BEFORE-CRS for runtime; AFTER-CRS for configure-time |
+| **Regex in `ctl:ruleRemoveTargetById`** | Silently fails — ModSec ignores regex target selectors; rule still fires | Use a literal name: `ctl:ruleRemoveTargetById=933150;REQUEST_COOKIES:session-token` |
+| **`ctl:ruleRemoveTargetById` on a chained rule** | Target exclusion doesn't propagate through chain links; chain still matches | Use `ctl:ruleRemoveById=RULE_ID` scoped to the URI instead |
+| **Duplicate custom rule IDs** | Second rule silently overwrites first; one exclusion never runs | Assign unique IDs — use a counter (100001, 100002, …) and keep a project ID registry |
 
 ---
 

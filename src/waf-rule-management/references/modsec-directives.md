@@ -53,6 +53,21 @@ Key ModSecurity v3 directives for rule operations, engine configuration, and log
 
 **Note**: These are v2-only. ModSecurity v3 uses compile-time PCRE limits. As of 2025, v3 is transitioning to PCRE2 as the default engine. See [regex-steering-guide.md](regex-steering-guide.md) for PCRE2 migration.
 
+### PCRE Limit Tuning (v2)
+
+`MSC_PCRE_LIMITS_EXCEEDED` (rule 200004) is the most frequently reported false positive class in ModSecurity v2 deployments. It is typically triggered by long query strings from social media tracking parameters (Facebook, Google Ads UTM chains) and complex ad-campaign URLs — not by malicious traffic.
+
+Community-validated safe values:
+
+| Profile | `SecPcreMatchLimit` | Notes |
+|---------|---------------------|-------|
+| Default (unchanged) | 1000 | Blocks some legitimate ad-campaign traffic |
+| Most production sites | 1500–2000 | Handles social media tracking params; recommended starting point |
+| Low-traffic sites | up to 10 000 | Acceptable when request volume is small |
+| Vendor suggestion (avoid) | 250 000 | Community consensus: causes resource exhaustion under load |
+
+Raise these limits **only** when audit logs confirm 200004 is triggering on legitimate traffic (tracking params, long query strings) and your regexes have been validated with `lint_regex.py`. Do not raise limits as a substitute for fixing ReDoS-prone patterns.
+
 ---
 
 ## Best Practices
@@ -70,7 +85,7 @@ Key ModSecurity v3 directives for rule operations, engine configuration, and log
 - **`SecRuleEngine Off`** as a troubleshooting shortcut — use `DetectionOnly` instead.
 - **`SecAuditLogParts ABCDEFGHIJKZ`** — logging everything is expensive. Section K is not implemented in v3.
 - **`SecDebugLogLevel` above 3 in production** — massive log volume, performance impact.
-- **Raising `SecPcreMatchLimit`** instead of fixing ReDoS-prone regexes (v2).
+- **Raising `SecPcreMatchLimit`** as a substitute for fixing ReDoS-prone regexes (v2) — raising is appropriate for the 200004 tracking-param FP class when regexes are sound.
 - **Missing `SecTmpDir`/`SecDataDir`** — causes silent failures for body buffering and persistent collections.
 - **Editing CRS rule files directly** — use exclusion directives instead.
 
