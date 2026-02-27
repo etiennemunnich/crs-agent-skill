@@ -4,7 +4,7 @@
 [![CI](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml)
 [![Links](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml)
 [![Skill Validate](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml)
-[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.4-8A2BE2)](https://agentskills.io)
+[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.6-8A2BE2)](https://agentskills.io)
 
 Agent skill for writing, validating, testing, and tuning **ModSecurity v3**, **Coraza**, and **OWASP Core Rule Set (CRS)** WAF rules using AI coding assistants.
 
@@ -67,6 +67,15 @@ All scripts live under `src/waf-rule-management/scripts/`.
 | `generate_exclusion.py` | Generate false-positive exclusion rules |
 | `new_incident.sh` | Scaffold an incident response workspace |
 | `assemble_rules.sh` | Assemble active incident rules into `custom-rules.conf` |
+
+### Project Scripts
+
+These live under the repo-level `scripts/` directory (not part of the skill package).
+
+| Script | Purpose |
+|--------|---------|
+| `lint.sh` | Repo-wide linting |
+| `engine_integration_compare.sh` | Cross-engine ModSecurity vs Coraza probe+log integration test |
 
 ---
 
@@ -131,6 +140,18 @@ src/waf-rule-management/
         ├── docker-compose.coraza.yaml   # Coraza + CRS + Albedo
         ├── .ftw.yaml                    # go-ftw configuration
         └── .env.example                 # Tunable environment variables
+
+scripts/                         # Project-level scripts (NOT part of skill)
+├── lint.sh                      # Repo-wide linting
+└── engine_integration_compare.sh # Cross-engine probe/log comparison
+
+tests/                           # Project-level tests (NOT part of skill)
+├── waf-rule-management/         # Unit tests for skill scripts
+│   ├── fixtures/
+│   ├── test_analyze_log_explain.py
+│   ├── test_detect_app_profile.py
+│   └── test_validate_exclusion.py
+└── integration/                 # Integration test artifacts (gitignored)
 ```
 
 ---

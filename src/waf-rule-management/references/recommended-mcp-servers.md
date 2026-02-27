@@ -119,6 +119,44 @@ rather than outdated training knowledge.
 
 ---
 
+## NVD CVE MCP Server (Optional)
+
+**Directory listing**: <https://mcpservers.org/servers/socteam-ai/nvd-cve-mcp-server>
+**npm**: `nvd-cve-mcp-server`
+
+### What It Does
+
+Provides CVE detail lookup and keyword search from NVD-oriented sources via MCP tools.
+Useful for fast triage context while writing incident notes and virtual-patch rationale.
+
+### Why It Matters for WAF Work
+
+| Use Case | How |
+|----------|-----|
+| **CVE details in incident triage** | Fetch CVSS, publication dates, references, CWE context for a CVE ID |
+| **Rapid keyword lookup** | Search vulnerability families (e.g., SQLi, WordPress plugin) to enrich risk context |
+| **MCP-native analyst flow** | Keep CVE research in the same agent workflow as rule/exclusion authoring |
+
+### Configuration
+
+```json
+{
+  "mcpServers": {
+    "nvd-cve": {
+      "command": "npx",
+      "args": ["-y", "nvd-cve-mcp-server"]
+    }
+  }
+}
+```
+
+### Suggested Role
+
+Use this as a **triage enrichment source** after technical validation, not as the only source of truth.
+For final tuning and compatibility decisions, still validate against upstream CRS/ModSecurity/Coraza docs.
+
+---
+
 ## Installation
 
 ### Cursor

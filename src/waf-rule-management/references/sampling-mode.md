@@ -63,6 +63,20 @@ SecAction "id:900110,phase:1,pass,setvar:tx.inbound_anomaly_score_threshold=10"
 SecAction "id:900110,phase:1,pass,setvar:tx.inbound_anomaly_score_threshold=5"
 ```
 
+### 2b. Production Retrofit (Existing Traffic)
+
+When adding CRS to **existing production** with mixed FP/TP traffic, start with a very high threshold so no legitimate users are blocked. Tune away FPs at each step, then lower:
+
+```apache
+# Start: no blocking (threshold 10000)
+SecAction "id:900110,phase:1,pass,setvar:tx.inbound_anomaly_score_threshold=10000"
+
+# After tuning highest-scoring FPs: 100 → 50 → 20 → 10 → 5
+# Lower only when FPs at current level are addressed
+```
+
+Progression: **10,000 → 100 → 50 → 20 → 10 → 5**. At each stage, use `analyze_log.py --summary --top-rules` to identify and fix FPs before advancing. See [false-positives-and-tuning.md](false-positives-and-tuning.md).
+
 ### 3. IP/Header-Based Sampling
 
 Apply CRS only to traffic matching a sampling condition:

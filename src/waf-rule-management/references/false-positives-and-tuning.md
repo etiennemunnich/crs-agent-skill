@@ -3,6 +3,10 @@
 Use this guide when legitimate traffic is blocked or heavily scored by CRS.
 Goal: reduce false positives while preserving detection depth.
 
+**Verified against** (2026-02-15):
+- https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/
+- https://coreruleset.org/docs/4-about-plugins/4-1-plugins/
+
 ## Authoritative References
 
 - CRS false-positive and exclusion guidance:
@@ -27,23 +31,37 @@ Before analyzing or writing any exclusion, collect the following. Without this c
 
 Ask the user for these details if they are not provided before proceeding.
 
+## Production Rollout Strategy
+
+When adding CRS to **existing production traffic**, start with a high anomaly threshold to avoid blocking legitimate users while you tune. Lower the threshold iteratively as you fix false positives:
+
+```
+10,000 → 100 → 50 → 20 → 10 → 5
+```
+
+At each step: deploy, observe, tune away FPs, then lower. A threshold of 5 (default) blocks on the first CRITICAL match; only reach it after FPs are under control. See [sampling-mode.md](sampling-mode.md) for the full production retrofit path.
+
 ## Standard Tuning Workflow
 
 1. Reproduce with controlled test traffic (same path, params, headers, body).
-2. Collect evidence from error log + audit log:
+2. **Prioritize by anomaly score** — when triaging many FPs, tackle highest-scoring requests first. They block the most traffic and often share common rule patterns.
+3. Collect evidence from error log + audit log:
    - rule ID
    - matched variable (`ARGS`, `REQUEST_COOKIES`, etc.)
    - URI/method context
    - anomaly score impact
-3. Classify event:
+4. Classify event:
    - true positive
    - acceptable behavior to allow
    - unknown (needs app owner validation)
-4. Apply the narrowest safe exclusion.
-5. Re-test:
+5. Use `python scripts/analyze_log.py audit.log --explain-rule <RULE_ID> --detail` to capture exact target/payload evidence.
+6. Run `python scripts/detect_app_profile.py audit.log` to check if an official CRS app profile/plugin applies first.
+7. Apply the narrowest safe exclusion.
+8. Validate exclusion safety: `python scripts/validate_exclusion.py --input exclusion.conf`.
+9. Re-test:
    - false-positive transaction passes
    - known attack payloads are still detected/blocked
-6. Add regression coverage in `go-ftw` for the case.
+10. Add regression coverage in `go-ftw` for the case.
 
 ## Exclusion Decision Tree
 
@@ -53,6 +71,20 @@ Prefer this order:
 2. **Configure-time target exclusion**
 3. **Runtime remove by ID/tag** (URI/method scoped)
 4. **Configure-time remove by ID/tag** (global last resort)
+
+### Rule Group-Aware Tuning (General Guidance)
+
+When selecting exclusions, consider the rule group semantics first:
+
+| Group | Typical Meaning | Tuning Bias |
+|------|------------------|-------------|
+| 920/921xxx | Protocol sanity/evasion checks | Prefer narrow protocol-specific fixes; avoid broad group removal |
+| 941xxx | XSS detectors | Usually content-field FPs; target exclusion on specific field+route |
+| 942xxx | SQLi detectors | Usually search/filter FPs; param+URI scoped exclusions |
+| 949/959xxx | Blocking evaluation | Treat as symptom; tune contributing rules/threshold policy |
+| 95x outbound | Response leak/anomaly checks | Tune app error behavior and response patterns before exclusion |
+
+Rule group details vary by CRS version; verify active files/rules in your running CRS release before writing broad exclusions. For full group mapping, phase order, and request/response flow: [crs-tune-rule-steering.md](crs-tune-rule-steering.md).
 
 ### Placement Rules (Critical)
 
@@ -80,6 +112,15 @@ Configure-time, single target:
 SecRuleUpdateTargetById 941320 "!ARGS:wp_post"
 ```
 
+Configure-time, regex target (for dynamically named variables, e.g. session cookies):
+
+```apache
+# Exclude cookies matching pattern (enclose regex in /.../)
+SecRuleUpdateTargetById 942440 "!REQUEST_COOKIES:/^uid_.*/"
+```
+
+**Note**: Target exclusions apply only to the **first rule** in a chained rule. For chained rules where the problematic target is in a later rule, you may need `SecRuleRemoveById` or `ctl:ruleRemoveById` instead.
+
 Configure-time, full rule removal (last resort):
 
 ```apache
@@ -89,6 +130,7 @@ SecRuleRemoveById 920273
 ## What to Avoid
 
 - Editing CRS rule files directly (creates an upgrade fork).
+- Using `ctl:ruleRemoveById` with rule ranges (e.g. `913000-913999`) — **ModSecurity v3 does not support ranges**; use `SecRuleRemoveById` (configure-time) for ranges, or exclude rules individually.
 - Global `SecRuleRemoveByTag attack-*` without tight justification.
 - Excluding by message (`ByMsg`) for core workflows; brittle and error-prone.
 - Skipping regression after exclusions.
@@ -121,6 +163,7 @@ Enable packages narrowly by app location whenever possible.
 
 ## Related References
 
+- [crs-tune-rule-steering.md](crs-tune-rule-steering.md) — CRS groups, phases, request/response, version-aware tuning
 - [go-ftw-reference.md](go-ftw-reference.md) — Regression testing after tuning
 - [first-responder-risk-runbook.md](first-responder-risk-runbook.md) — Incident-driven tuning
 - [log-analysis-steering.md](log-analysis-steering.md) — Identifying false positives in logs

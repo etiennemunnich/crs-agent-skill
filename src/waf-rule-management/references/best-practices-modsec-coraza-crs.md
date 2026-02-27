@@ -118,6 +118,7 @@ Load directives in this order:
 | **Exclusion placement** | Prefer `SecRuleRemoveById` / `SecRuleRemoveByTag` in before-CRS config. Use `ctl:ruleRemoveById` for request-specific exclusions. |
 | **Scope** | Narrow exclusions to specific URIs, methods, or variables. Avoid global disables. |
 | **Application profiles** | Use [CRS plugins](https://github.com/coreruleset/plugin-registry) (e.g. WordPress, Drupal) for known apps. |
+| **DAST/discovery ingress mapping** | Run `cdncheck` first to detect CDN/cloud/WAF front doors that may mask origin behavior during profiling and assessment. |
 | **Sampling mode** | Use for gradual rollout; start with low percentage, increase after validation. |
 
 ### Deployment Workflow
@@ -127,6 +128,10 @@ Load directives in this order:
 3. Add exclusions for legitimate traffic.
 4. Validate with go-ftw or similar.
 5. Enable blocking; continue monitoring.
+
+For discovery-first assessments, add:
+- `go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest`
+- `cdncheck -i app.example.com -jsonl`
 
 ### Sources
 

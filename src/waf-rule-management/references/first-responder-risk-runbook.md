@@ -209,6 +209,15 @@ The environment is shared across incidents — one WAF instance serves all evalu
 
 ### 3) Build and run probes (OODA: Orient → Decide)
 
+For a repeatable baseline, run the repo-level cross-engine integration script:
+
+```bash
+# From repo root (project-level script, not part of the skill):
+bash scripts/engine_integration_compare.sh <INCIDENT_ID>
+```
+
+This produces comparable artifacts under `tests/integration/<INCIDENT_ID>/` (response matrix, audit logs, and analyzed summaries for both engines). You can then extend the probe set manually for incident-specific payloads.
+
 **CRITICAL: Test each payload across multiple content-types.** The same attack string can be blocked in one content-type and missed in another (e.g., JSON body processor detects prototype pollution but multipart form fields do not).
 
 Convention:

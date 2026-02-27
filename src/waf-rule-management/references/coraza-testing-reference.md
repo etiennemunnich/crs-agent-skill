@@ -29,6 +29,9 @@ go-ftw run --cloud --config assets/docker/.ftw.yaml -d path/to/tests/
 docker compose -f assets/docker/docker-compose.yaml down
 docker compose -f assets/docker/docker-compose.coraza.yaml up -d
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d path/to/tests/
+
+# Scripted cross-engine probe+log artifacts (repo-level, from repo root):
+# bash scripts/engine_integration_compare.sh <INCIDENT_ID>
 ```
 
 **Note**: go-ftw requires a `.ftw.yaml` config file for the target host/port. See
@@ -116,6 +119,14 @@ Plugins:
 - Mount plugin files under `/opt/coraza/plugins` to load CRS plugins at startup.
 - Upstream plugin registry: <https://github.com/coreruleset/plugin-registry>
 
+## Coraza Tuning Notes
+
+CRS tuning on Coraza uses the **same exclusion syntax** as ModSecurity: `SecRuleRemoveById`, `ctl:ruleRemoveTargetById`, `SecRuleUpdateTargetById`, etc. Placement rules are identical (runtime before CRS, configure-time after).
+
+**RE2 behavior**: Coraza uses Go's `regexp` (RE2-based) by default. PCRE-only features (lookahead, lookbehind, backreferences) are not supported. CRS v4 rules are RE2-compatible; custom rules intended for both engines should avoid PCRE-only patterns. See [regex-steering-guide.md](regex-steering-guide.md).
+
+**Config paths**: Custom exclusions go in `/opt/coraza/rules.d/` (Coraza) vs `/etc/modsecurity.d/` (ModSecurity). Mount your exclusion file to the correct path for your engine.
+
 ## Custom Rules and False Positive Testing
 
 - Custom rules are assembled from `incidents/*/rules.conf` into `assets/docker/custom-rules.conf` using `scripts/assemble_rules.sh`. Do not edit `custom-rules.conf` directly.
@@ -158,6 +169,7 @@ See `first-responder-risk-runbook.md` for the full procedure.
 
 ## Related
 
+- [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies (same syntax on Coraza)
 - `go-ftw-reference.md`
 - `crs-sandbox-reference.md`
 - `log-analysis-steering.md`

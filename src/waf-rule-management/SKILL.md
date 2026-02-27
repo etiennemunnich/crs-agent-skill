@@ -18,7 +18,7 @@ compatibility: >
   to install go-ftw, crs-toolchain, PyYAML. Scripts must support --help.
 metadata:
   author: owasp-crs-tooling
-  version: "0.4"
+  version: "0.6"
 ---
 
 # WAF Rule Management
@@ -44,7 +44,7 @@ and Coraza WAF rules with OWASP Core Rule Set (CRS v4.x).
 **First time**: `bash scripts/install_tools.sh` (see [README](README.md)).
 
 **Required**: Python 3.8+, PyYAML, Go toolchain, go-ftw, crs-toolchain, Docker or Finch.
-**Optional (recommended)**: crslang, modsec-rules-check (parser validation).
+**Optional (recommended)**: crslang, modsec-rules-check (parser validation), cdncheck (ingress discovery).
 
 > **Container runtime**: All `docker compose` / `docker logs` commands work identically with `finch compose` / `finch logs`. Replace `docker` with `finch` throughout if Docker is not installed. Scripts auto-detect the available runtime.
 
@@ -64,8 +64,15 @@ python scripts/validate_rule.py rule.conf            # Validate syntax
 python scripts/lint_regex.py rule.conf -v             # ReDoS/performance lint
 python scripts/lint_crs_rule.py rule.conf             # CRS convention lint
 python scripts/analyze_log.py audit.log --summary     # Log analysis
+python scripts/analyze_log.py audit.log --explain     # Why rules triggered
 python scripts/openapi_to_rules.py spec.yaml -o r.conf  # OpenAPI → rules
+python scripts/validate_exclusion.py --input exclusion.conf --output text  # Exclusion safety checks
+python scripts/detect_app_profile.py audit.log --output text  # App profile hints
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/  # Regression tests
+
+# Optional ingress discovery (CDN/cloud/WAF front door)
+go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
+cdncheck -i app.example.com -jsonl
 
 # Test environment — choose your engine:
 docker compose -f assets/docker/docker-compose.yaml up -d          # ModSecurity
@@ -80,6 +87,7 @@ curl -H "x-format-output: txt-matched-rules" \
 ## Determine Your Task
 
 Choose workflow by intent:
+- DAST/discovery and ingress mapping: use `cdncheck` first, then continue with tuning/log flows
 - New/custom detection: [Writing New Rules](#writing-new-rules)
 - API allowlist model: [OpenAPI to WAF Rules](#openapi-to-waf-rules)
 - False positives and exclusions: [Tuning and False Positives](#tuning-and-false-positives)
@@ -96,7 +104,51 @@ Choose workflow by intent:
   - Per-incident regression: `go-ftw run --cloud --config assets/docker/.ftw.yaml -d incidents/<INCIDENT_ID>/tests/`
 - Rule conversion (v2→v3): [modsecurity-migration-checklist.md](references/modsecurity-migration-checklist.md)
 - CRSLang (next-gen format): [crslang-reference.md](references/crslang-reference.md)
+- CRS rule groups / ID families / how rules work (version-aware): [crs-tune-rule-steering.md](references/crs-tune-rule-steering.md), [crs-rule-format.md](references/crs-rule-format.md)
 - Deployment & rollout: [best-practices-modsec-coraza-crs.md](references/best-practices-modsec-coraza-crs.md), [sampling-mode.md](references/sampling-mode.md), [paranoia-levels.md](references/paranoia-levels.md)
+
+---
+
+## LRM Default Workflow (Concise)
+
+For most false-positive and triage tasks, steer with this minimal sequence:
+
+1. **Observe**: `analyze_log.py --summary --top-rules 20`
+2. **Explain**: `analyze_log.py --explain-rule <ID> --detail`
+3. **Profile check**: `detect_app_profile.py` (and app package/plugin match)
+4. **Tune narrow**: `generate_exclusion.py` (URI + param scoped)
+5. **Validate + test**: `validate_exclusion.py` + go-ftw regression
+
+Use broader discovery tools (`httpx`, `cdncheck`, `nuclei`, `vulnx`) only when the core 5-step flow lacks enough evidence.
+
+---
+
+## DAST/Discovery Tool Preference Order
+
+Use these tools directly (not wrappers) based on the gap you need to fill:
+
+| Priority | Tool | Use First When | Why |
+|----------|------|----------------|-----|
+| 1 | `httpx` | You need live target normalization + HTTP probing | Fast host/URL probing, tech detect, response metadata, CDN hints |
+| 2 | `cdncheck` | You need ingress visibility (CDN/cloud/WAF masking) | Confirms front-door providers that may hide origin fingerprints |
+| 3 | `nuclei` | You need active DAST checks for known classes/CVEs | High-performance scanner across HTTP/DNS/network/cloud |
+| 4 | `nuclei-templates` | You need broad, current detection coverage | Community-curated template corpus used by `nuclei` |
+| 5 | `cvemap` (`vulnx`) | You need vuln intelligence prioritization | Search/filter CVEs, KEV/PoC/template context for risk triage |
+| 6 | `nvd-cve` MCP server | You need CVE fact lookup inside agent chat | Quick CVE detail/search in MCP-native workflow |
+
+Practical steering sequence:
+1. `httpx` enumerate reachable surfaces and technology clues.
+2. `cdncheck` confirm ingress layers and adjust confidence for origin fingerprinting.
+3. `nuclei` with curated template scope (start focused, then widen).
+4. `cvemap` (`vulnx`) prioritize findings by severity, KEV, exploitability.
+5. `nvd-cve` MCP for rapid CVE detail lookup during triage writeups.
+
+Reference installs:
+- `go install github.com/projectdiscovery/httpx/cmd/httpx@latest`
+- `go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest`
+- `go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest`
+- `go install github.com/projectdiscovery/cvemap/cmd/vulnx@latest`
+- `nuclei -ut` (update templates)
 
 ---
 
@@ -114,6 +166,7 @@ Load only files matching the current task. Tags are short routing labels for age
 | `references/modsec-crs-testing-reference.md` | modsec,testing,docker,crs | ModSecurity + CRS local test environment, go-ftw workflow, troubleshooting |
 | `references/crs-application-profiles.md` | app-profiles,exclusions,tuning | Tuning for known app stacks (WordPress/Drupal/etc.) |
 | `references/crs-rule-format.md` | crs-contrib,rule-style,metadata | Writing rules for CRS contribution or CRS-style formatting |
+| `references/crs-tune-rule-steering.md` | crs,tune,groups,phases,request,response | How CRS rules work, groups, request/response flow, version-aware tuning |
 | `references/crs-sandbox-reference.md` | sandbox,reproducibility,http | Building reproducible CRS Sandbox requests (method/headers/body/evidence) |
 | `references/crs-toolchain-reference.md` | crs-toolchain,fp-finder,regex | Using `crs-toolchain` commands for regex and FP workflows |
 | `references/crslang-reference.md` | crslang,conversion,validation | Converting Seclang/CRSLang or parser-based validation workflows |
@@ -188,11 +241,21 @@ Reference implementations: [openapi-sec](https://github.com/EP-Tribe/openapi-sec
 
 ```bash
 python scripts/analyze_log.py audit.log --rule-id 942100
+python scripts/analyze_log.py audit.log --explain-rule 942100 --detail
 python scripts/generate_exclusion.py --rule-id 942100 --uri /api/search --param ARGS:q
+python scripts/validate_exclusion.py --rule-id 942100 --uri /api/search --param ARGS:q --type runtime
 python scripts/validate_rule.py exclusion.conf
 ```
 
 **Key principle**: Runtime exclusions (`ctl:*`) go BEFORE CRS include; configure-time exclusions (`SecRuleRemove*`, `SecRuleUpdateTarget*`) go AFTER CRS include.
+Always prefer target-level + URI-scoped exclusions before whole-rule removals.
+
+Steering order for tuning tasks:
+1. Use `analyze_log.py --explain` (or `--explain-rule`) to identify the precise target and payload evidence.
+2. For DAST/discovery, run `cdncheck` to identify CDN/cloud/WAF ingress that may mask origin signals.
+3. Use `detect_app_profile.py` to check if an official CRS app package/plugin applies.
+4. Generate candidate exclusion with `generate_exclusion.py`.
+5. Validate safety/trade-offs with `validate_exclusion.py` before finalizing.
 
 For exclusion strategies, decision tree, patterns, and what to avoid: [false-positives-and-tuning.md](references/false-positives-and-tuning.md).
 For app-specific exclusion packages (WordPress, Drupal, APIs): [crs-application-profiles.md](references/crs-application-profiles.md).
@@ -206,6 +269,9 @@ For antipatterns: [antipatterns-and-troubleshooting.md](references/antipatterns-
 python scripts/analyze_log.py audit.log --summary
 python scripts/analyze_log.py audit.log --top-rules 20
 python scripts/analyze_log.py audit.log --rule-id 942100 --detail
+python scripts/analyze_log.py audit.log --explain
+python scripts/analyze_log.py audit.log --explain-rule 942100 --detail
+python scripts/detect_app_profile.py audit.log --output text
 ```
 
 Classify triggers as TP or FP. For FPs → [Tuning workflow](#tuning-and-false-positives). For TPs → verify coverage.
@@ -221,6 +287,7 @@ Use both **local (CRS + Albedo + go-ftw)** and **CRS Sandbox** in your process:
 1. **Quick payload check** → Sandbox (no setup): [crs-sandbox-reference.md](references/crs-sandbox-reference.md)
 2. **Full regression** → Local: start compose + run go-ftw: [go-ftw-reference.md](references/go-ftw-reference.md)
 3. **Compare** → Same payload in both to verify consistency
+4. **Script it** (repo-level) → `bash scripts/engine_integration_compare.sh <ID>` for repeatable probe+log artifacts
 
 **Choose your engine** (ask the user if unclear). Both share port 8080 — run one at a time.
 Review tuning parameters before first use — see `assets/docker/.env.example`.

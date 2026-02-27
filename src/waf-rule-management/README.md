@@ -40,6 +40,11 @@ bash scripts/install_tools.sh
 | Docker or Finch | **Required** for local integration tests | Local CRS+Albedo test environment | [Docker](https://docker.com) / [Finch](https://runfinch.com) |
 | crslang | **Optional (strongly recommended)** | Primary parser-based rule validation | `git clone https://github.com/coreruleset/crslang && cd crslang && go build` |
 | modsec-rules-check / rules-check | **Optional (recommended for legacy parity)** | Official legacy ModSecurity parser validation | Package manager or build from [ModSecurity](https://github.com/owasp-modsecurity/ModSecurity) |
+| cdncheck | **Optional (recommended for DAST/discovery)** | Detect CDN/cloud/WAF ingress that can mask application fingerprinting | `go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest` |
+| httpx | **Optional (recommended for DAST/discovery)** | Probe live HTTP surfaces and technology metadata | `go install github.com/projectdiscovery/httpx/cmd/httpx@latest` |
+| nuclei | **Optional (recommended for DAST/discovery)** | Active vulnerability scanning engine | `go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest` |
+| nuclei-templates | **Optional (recommended for DAST/discovery)** | Template corpus used by nuclei | `nuclei -ut` |
+| cvemap (`vulnx`) | **Optional (recommended for triage)** | CVE intelligence search/filtering and prioritization | `go install github.com/projectdiscovery/cvemap/cmd/vulnx@latest` |
 
 Validation behavior:
 
@@ -79,9 +84,11 @@ python scripts/openapi_to_rules.py openapi.yaml -o rules.conf
 | `lint_crs_rule.py` | CRS convention checker (ID range, tags, severity) |
 | `lint_regex.py` | Lint `@rx` patterns for ReDoS risk and performance |
 | `openapi_to_rules.py` | OpenAPI 3.x → ModSec v3 positive-security rules |
-| `analyze_log.py` | Audit log parser (JSON + Native format) |
+| `analyze_log.py` | Audit log parser (JSON + Native) with rule-trigger explanations |
 | `generate_ftw_test.py` | go-ftw v2 test YAML generator |
-| `generate_exclusion.py` | FP exclusion rule generator (runtime/configure-time) |
+| `generate_exclusion.py` | FP exclusion rule generator with trade-off explanations |
+| `validate_exclusion.py` | Exclusion safety validator (scope/placement/broadness checks) |
+| `detect_app_profile.py` | Log-based CMS/framework fingerprinting and CRS profile hints |
 | `install_tools.sh` | Install all required + optional tools |
 | `new_incident.sh` | Scaffold incident workspace directory |
 | `assemble_rules.sh` | Assemble incident rules into WAF custom-rules.conf |
@@ -100,6 +107,8 @@ python scripts/openapi_to_rules.py openapi.yaml -o rules.conf
 Prefer direct commands over wrappers for reproducibility and easier issue reporting.
 
 - [ ] Use latest stable versions of `go-ftw`, `crs-toolchain`, and `crslang` unless policy requires pinning.
+- [ ] During DAST/discovery, run `cdncheck` early to document CDN/cloud/WAF ingress before application fingerprinting.
+- [ ] Use this DAST/discovery order: `httpx` -> `cdncheck` -> `nuclei` (+ `nuclei-templates`) -> `vulnx`.
 - [ ] Record exact versions and image tags in every ticket or incident note.
 - [ ] Use explicit `docker compose`, `go-ftw`, and `curl` commands with full method/header/body details.
 - [ ] Attach request/response artifacts and matched rule output when filing CRS issues.
@@ -188,10 +197,17 @@ Ensure scripts are executable: `chmod +x scripts/*.sh`
 | [crslang](https://github.com/coreruleset/crslang) | Seclang/CRSLang parser | Apache-2.0 |
 | [Albedo](https://github.com/coreruleset/albedo) | HTTP reflector for go-ftw | Apache-2.0 |
 | [PyYAML](https://github.com/yaml/pyyaml) | OpenAPI YAML parsing | MIT |
+| [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo) | Optional high-confidence app fingerprinting helper | MIT |
+| [cdncheck](https://github.com/projectdiscovery/cdncheck) | Optional CDN/cloud/WAF ingress detection for DAST/discovery | MIT |
+| [httpx](https://github.com/projectdiscovery/httpx) | Optional HTTP probing and technology discovery for DAST/discovery | MIT |
+| [nuclei](https://github.com/projectdiscovery/nuclei) | Optional active vulnerability scanner for DAST/discovery | MIT |
+| [nuclei-templates](https://github.com/projectdiscovery/nuclei-templates) | Optional nuclei template source for broad vulnerability coverage | MIT |
+| [cvemap](https://github.com/projectdiscovery/cvemap) | Optional CVE intelligence CLI (`vulnx`) for vulnerability prioritization | MIT |
 | [Docker](https://www.docker.com/) | Container runtime | Docker licensing terms apply |
 | [Finch](https://runfinch.com/) | Container runtime (alternative) | Apache-2.0 |
 | [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) | Browser automation MCP server | Apache-2.0 |
 | [Context7 MCP](https://context7.com) | Live documentation MCP server | Upstash terms apply |
+| [NVD CVE MCP Server](https://mcpservers.org/servers/socteam-ai/nvd-cve-mcp-server) | Optional MCP CVE lookup/search for analyst triage | MIT |
 
 ## License
 

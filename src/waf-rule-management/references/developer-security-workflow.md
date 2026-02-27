@@ -18,10 +18,38 @@ Map WAF rule changes into a developer-friendly lifecycle with OODA at each stage
 
 | OODA Phase | Developer Action | Tooling |
 |------------|-----------------|---------|
-| **Observe** | Receive FP report, CVE advisory, or new API spec | Audit logs, monitoring alerts, OpenAPI spec diff |
+| **Observe** | Receive FP report, CVE advisory, or new API spec | Audit logs, monitoring alerts, OpenAPI spec diff, `cdncheck` ingress discovery |
 | **Orient** | Identify triggering rules, classify FP vs TP, scope the change | `analyze_log.py`, CRS Sandbox, `crs-toolchain util fp-finder` |
 | **Decide** | Choose fix: exclusion, new rule, tuning, or positive-security rule | `openapi-to-waf.md`, `false-positives-and-tuning.md`, `paranoia-levels.md` |
 | **Act** | Write rule → validate → lint → test → PR → deploy | Scripts, go-ftw, CI pipeline |
+
+### DAST/Discovery Ingress Check (recommended)
+
+Before deep fingerprinting/tuning, map ingress providers that may mask the origin stack:
+
+```bash
+# Install latest cdncheck
+go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
+
+# Detect CDN / cloud / WAF in front of target
+cdncheck -i app.example.com -jsonl
+cdncheck -i app.example.com -waf -resp
+```
+
+If CDN/WAF ingress is detected, treat origin fingerprinting confidence as lower and prefer:
+1. log-based evidence from WAF telemetry,
+2. app profile recommendations with explicit confidence,
+3. staged validation before exclusion rollout.
+
+### Tool Preference to Fill Discovery Gaps
+
+Use these tools directly (in this order) when building discovery evidence:
+
+1. `httpx` - normalize reachable targets, tech hints, HTTP metadata.
+2. `cdncheck` - confirm CDN/cloud/WAF ingress masking.
+3. `nuclei` + `nuclei-templates` - run focused active checks (then broaden).
+4. `vulnx` (`cvemap`) - prioritize findings by severity/KEV/PoC/template availability.
+5. `nvd-cve` MCP - quick CVE lookup inside analyst workflow.
 
 ## Pre-Commit Checks
 

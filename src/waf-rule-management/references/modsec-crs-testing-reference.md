@@ -170,6 +170,13 @@ docker compose -f assets/docker/docker-compose.coraza.yaml up -d
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/
 ```
 
+For a scripted probe+log comparison (same payload matrix on both engines plus captured artifacts), use the repo-level integration script:
+
+```bash
+# From repo root (project-level script, not part of the skill):
+bash scripts/engine_integration_compare.sh <INCIDENT_ID>
+```
+
 See [coraza-testing-reference.md](coraza-testing-reference.md) for Coraza-specific env vars and paths.
 
 ---

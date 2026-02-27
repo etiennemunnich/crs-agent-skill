@@ -36,6 +36,20 @@ Sections separated by `--boundary-X--` (e.g. `--c7036611-A--`). Key sections:
 
 One JSON object per line (or array). Fields: `transaction`, `audit_data`, `messages`, `client_ip`, `uri`, `request_method`, etc.
 
+### Payload Visibility (What You Usually Get)
+
+Rule-match context is typically available by default; full request payload visibility depends on log parts and body-access settings.
+
+| Engine/Profile | Typical default | Usually includes matched snippet (`[data ...]`) | Usually includes full body |
+|---|---|---|---|
+| ModSecurity v3 + CRS Docker profile | JSON audit logs with relevant parts | Yes (when rule logs `data`/`logdata`) | Depends on `SecAuditLogParts` and body-access settings |
+| Coraza + CRS Docker profile | JSON audit logs with relevant parts | Yes (rule message/data) | Depends on `SecAuditLogParts` and `SecRequestBodyAccess` |
+
+Practical default for LRMs:
+- Expect reliable **rule id + message + matched variable/data snippet**.
+- Do **not** assume full request body is present in every environment.
+- If full payload is missing, guide user to verify audit log parts/body settings before deep forensics.
+
 ---
 
 ## 2. Top Talker: Audit Log (Native)
@@ -195,6 +209,8 @@ tail -500 error.log | grep -E 'ModSecurity|denied|block'
 |------|------|---------|
 | Top rules | analyze_log.py | `python scripts/analyze_log.py audit.log --top-rules 20` |
 | Rule detail | analyze_log.py | `python scripts/analyze_log.py audit.log --rule-id 942100 --detail` |
+| Why rule triggered | analyze_log.py | `python scripts/analyze_log.py audit.log --explain-rule 942100 --detail` |
+| App profile hint | detect_app_profile.py | `python scripts/detect_app_profile.py audit.log --output text` |
 | Top IPs | CLI | `grep ... \| awk ... \| sort \| uniq -c \| sort -rn \| head -20` |
 | Top paths | CLI | `grep -E '^(GET|POST) ' audit.log \| awk '{print $2}' \| sort \| uniq -c \| sort -rn \| head -20` |
 | Top rules (CLI) | grep/sed | `grep -oE 'id "([0-9]+)"' audit.log \| sed ... \| sort \| uniq -c \| sort -rn \| head -20` |
@@ -209,7 +225,7 @@ tail -500 error.log | grep -E 'ModSecurity|denied|block'
 |-----------|---------|
 | "Top IPs hitting the WAF" | CLI: Section A IP extraction or jq for JSON |
 | "Which rules fire most?" | `analyze_log.py --top-rules 20` or grep rule IDs |
-| "Why is X blocked?" | `analyze_log.py --rule-id N --detail` or grep for URI |
+| "Why is X blocked?" | `analyze_log.py --explain-rule N --detail` then `--rule-id N --detail` for raw samples |
 | "Error log analysis" | grep for id, client, uri; check PCRE limits |
 | "Top blocked paths" | Filter for blocked + extract path from Section B |
 | "Payload sizes" | Section C length or jq request_body length |
@@ -231,6 +247,9 @@ tail -500 error.log | grep -E 'ModSecurity|denied|block'
 
 - Start every investigation with `--summary` to get a high-level view before drilling into specific rules.
 - Use `--top-rules` to identify the noisiest rules — these are your highest-impact tuning targets.
+- Use `--explain` or `--explain-rule` before tuning to capture variable/payload evidence, not just hit counts.
+- Run `detect_app_profile.py` once per dataset to check if official CRS app exclusions/plugins are a better first fix than custom rules.
+- Assume partial evidence first (id/msg/data snippet); verify body logging config before requiring full payload reconstruction.
 - Always correlate audit log findings with error log entries — some events appear in one but not the other.
 - When analyzing CRS Docker JSON logs, pipe through `jq` for structured filtering rather than raw `grep`.
 - Archive raw logs before analysis — processed summaries cannot replace raw evidence.

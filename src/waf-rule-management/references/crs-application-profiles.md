@@ -2,7 +2,10 @@
 
 Application-specific CRS tuning for common platforms. CRS ships pre-built exclusion packages; use them before writing custom exclusions.
 
-**Verified against**: CRS v4.23.0, https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/.
+**Verified against** (2026-02-15):
+- CRS docs: https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/
+- CRS plugins docs: https://coreruleset.org/docs/4-about-plugins/4-1-plugins/
+- CRS plugin registry: https://github.com/coreruleset/plugin-registry
 
 ---
 
@@ -128,12 +131,14 @@ SecRule REQUEST_URI "@beginsWith /api/" \
 
 ## Workflow for Application Tuning
 
-1. **Check if a CRS package exists** for your application. Enable it first.
-2. **Run representative traffic** through the WAF (or replay production logs).
-3. **Analyze false positives**: `python scripts/analyze_log.py audit.log --top-rules 20`.
-4. **Apply narrowest exclusion** — prefer `ctl:ruleRemoveTargetById` scoped by URI over global removal.
-5. **Test regression**: `go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/`.
-6. **Document exclusions** with reason, date, and owning team.
+1. **Run representative traffic** through the WAF (or replay production logs).
+2. **Detect likely profile**: `python scripts/detect_app_profile.py audit.log --output text`.
+3. **Check if a CRS package/plugin exists** for the detected application and enable that first.
+4. **Analyze false positives**: `python scripts/analyze_log.py audit.log --explain`.
+5. **Apply narrowest exclusion** — prefer `ctl:ruleRemoveTargetById` scoped by URI over global removal.
+6. **Validate exclusion trade-offs**: `python scripts/validate_exclusion.py --input exclusion.conf`.
+7. **Test regression**: `go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/`.
+8. **Document exclusions** with reason, date, and owning team.
 
 ---
 

@@ -67,6 +67,44 @@ SecRule VARIABLE "@OPERATOR pattern" \
 | 949xxx | Inbound blocking evaluation |
 | 950xxx–959xxx | Outbound rules |
 
+### Version Variance Notes
+
+- Rule IDs and group intent are generally stable, but exact rule membership changes across CRS releases.
+- Some logic may move into plugins or be refactored between minor/major versions.
+- Before broad exclusions, confirm loaded files/rules in the running CRS version.
+
+Verify against:
+- https://github.com/coreruleset/coreruleset
+- https://coreruleset.org/docs/
+
+### CRS Rule Groups in Practice
+
+Use this for steering during triage and tuning.
+
+| Group | Main Goal | Typical Surface | Frequent FP Pattern | Safer First Tuning |
+|------|-----------|-----------------|---------------------|--------------------|
+| 901xxx Initialization | Configure TX defaults/thresholds | Setup phase | Misconfigured setup variables | Fix config; avoid excluding 901 rules |
+| 910xxx IP reputation | Flag known risky source ranges | Client IP | Internal scanners/NAT testing traffic | Source + path allowlisting, not global disable |
+| 911xxx Method enforcement | Enforce expected HTTP methods | Request method | API endpoints with uncommon verbs | Per-endpoint method tuning |
+| 912/913xxx Scanner detection | Detect scanner behavior/signatures | Headers/URI | Monitoring/QA tooling | Narrow signal exclusions on known probe paths |
+| 920/921xxx Protocol checks | Detect protocol violations/evasion | Headers/URI/encoding | Legacy clients/proxy quirks | Tune specific check before group-level removals |
+| 930/931xxx File inclusion | LFI/RFI/path traversal detection | URI/ARGS/BODY | Legit file-like app parameters | URI+param scoped target exclusions |
+| 932xxx RCE | Command-injection indicators | ARGS/BODY | Admin/dev inputs with shell-like strings | Param-scoped exclusions only |
+| 933xxx PHP injection | PHP-specific abuse patterns | ARGS/BODY | CMS/plugin internals | Prefer CRS app profile/plugin before custom rules |
+| 941xxx XSS | Script/HTML injection detection | ARGS/BODY/cookies | Rich text editors and CMS content fields | Target exclusion on content fields + route |
+| 942xxx SQLi | SQL lexical/pattern detection | ARGS/BODY/cookies | Search/filter parameters with SQL-like terms | Param+URI scoped exclusion; keep rule elsewhere |
+| 943xxx Session fixation | Session token misuse checks | Cookies/args | Custom session/token formats | Exclude specific token variables only |
+| 944xxx Java attacks | Java-specific injection patterns | ARGS/BODY | Code snippet/docs workflows | Endpoint+parameter scoped exclusion |
+| 949xxx Inbound evaluation | Inbound anomaly block decision | TX scores | Threshold-policy mismatch | Tune contributing rules before threshold changes |
+| 95x outbound families | Leakage/outbound evaluation | Response body/headers/status | Verbose debug/error responses | Fix app error behavior before relaxing WAF |
+
+### Triage Shortcuts by Group
+
+- `941xxx` and `942xxx` are common high-volume groups; always inspect matched variable + payload evidence first.
+- `920/921xxx` spikes often indicate transport/proxy/client edge cases more than direct app bugs.
+- `949/959` are decision rules, not root-cause signatures; tune upstream contributing rules first.
+- Keep inbound and outbound tuning separate to avoid masking real response leakage.
+
 ### Custom Rule Ranges
 
 | Range | Use |
@@ -195,6 +233,7 @@ See https://coreruleset.org/docs/development/ for contribution guidelines.
 
 ## Related References
 
+- [crs-tune-rule-steering.md](crs-tune-rule-steering.md) — How CRS rules work, groups, request/response, phases, version-aware tuning
 - [actions-reference.md](actions-reference.md) — Detailed action guidance
 - [regex-steering-guide.md](regex-steering-guide.md) — Regex quality and PCRE2
 - [operators-and-transforms.md](operators-and-transforms.md) — Operator/transform tables

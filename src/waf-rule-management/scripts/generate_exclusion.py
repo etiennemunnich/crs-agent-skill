@@ -4,6 +4,7 @@ Generate rule exclusion from false positive pattern.
 Outputs runtime (before CRS) or configure-time (after CRS) exclusion.
 """
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -46,7 +47,49 @@ def parse_args():
         default=None,
         help="Output file (default: stdout)",
     )
+    parser.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format. text prints exclusion snippet, json prints metadata + snippet.",
+    )
+    parser.add_argument(
+        "--no-explain",
+        action="store_true",
+        help="Disable explanatory comments and trade-off notes in text output.",
+    )
     return parser.parse_args()
+
+
+def build_tradeoff_notes(exclusion_type: str, uri: str, param: str) -> list:
+    notes = []
+    if param:
+        notes.append(
+            "Target-only exclusion keeps rule coverage for other variables and is the preferred starting point."
+        )
+    else:
+        notes.append(
+            "Whole-rule removal is broader and should be used only when target-level tuning is not viable."
+        )
+
+    if uri == "/":
+        notes.append(
+            "Global scope (/) increases bypass risk. Prefer narrowing to the affected URI prefix."
+        )
+    else:
+        notes.append(
+            f"URI scope is limited to '{uri}', reducing impact radius."
+        )
+
+    if exclusion_type == "configure":
+        notes.append(
+            "Configure-time exclusions are static and apply after CRS include."
+        )
+    else:
+        notes.append(
+            "Runtime exclusions are conditional and must be loaded before CRS include."
+        )
+    return notes
 
 
 def generate_runtime_exclusion(rule_id: str, uri: str, param: str, excl_id: int) -> str:
@@ -96,11 +139,50 @@ def main():
         sys.exit(1)
 
     if args.type == "runtime":
-        output = generate_runtime_exclusion(args.rule_id, uri, param, args.id)
+        exclusion_rule = generate_runtime_exclusion(args.rule_id, uri, param, args.id)
     else:
         if uri != "/" and not param:
             print("Warning: --uri is ignored for configure-time full rule exclusion", file=sys.stderr)
-        output = generate_configure_exclusion(args.rule_id, param)
+        exclusion_rule = generate_configure_exclusion(args.rule_id, param)
+
+    recommendations = []
+    if not param:
+        recommendations.append(
+            "Consider --param ARGS:<name> (or REQUEST_HEADERS:<name>) to avoid disabling the whole rule."
+        )
+    if uri == "/":
+        recommendations.append(
+            "Consider adding --uri /specific/path to reduce blast radius."
+        )
+    notes = build_tradeoff_notes(args.type, uri, param)
+
+    result = {
+        "rule_id": args.rule_id,
+        "exclusion_type": args.type,
+        "scope": "target" if param else "rule",
+        "uri_scope": uri,
+        "parameter_scope": param,
+        "tradeoffs": notes,
+        "recommendations": recommendations,
+        "exclusion": exclusion_rule,
+    }
+
+    if args.output_format == "json":
+        output = json.dumps(result, indent=2)
+    else:
+        if args.no_explain:
+            output = exclusion_rule
+        else:
+            note_lines = "\n".join(f"# - {note}" for note in notes)
+            rec_lines = "\n".join(f"# - {note}" for note in recommendations) or "# - none"
+            output = (
+                "# Exclusion rationale\n"
+                f"# type={args.type}, scope={'target' if param else 'rule'}, uri={uri}\n"
+                f"{note_lines}\n"
+                "# Recommended follow-ups\n"
+                f"{rec_lines}\n\n"
+                f"{exclusion_rule}"
+            )
 
     if args.output:
         args.output.write_text(output, encoding="utf-8")

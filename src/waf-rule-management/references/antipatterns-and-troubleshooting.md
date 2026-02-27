@@ -60,6 +60,7 @@ Do not silently accept antipatterns. Proactively steer toward best practices.
 | **Regex in `ctl:ruleRemoveTargetById`** | Silently fails — ModSec ignores regex target selectors; rule still fires | Use a literal name: `ctl:ruleRemoveTargetById=933150;REQUEST_COOKIES:session-token` |
 | **`ctl:ruleRemoveTargetById` on a chained rule** | Target exclusion doesn't propagate through chain links; chain still matches | Use `ctl:ruleRemoveById=RULE_ID` scoped to the URI instead |
 | **Duplicate custom rule IDs** | Second rule silently overwrites first; one exclusion never runs | Assign unique IDs — use a counter (100001, 100002, …) and keep a project ID registry |
+| **ctl:ruleRemoveById with rule range** | ModSecurity v3 does not support ranges (e.g. `913000-913999`) | Use SecRuleRemoveById (configure-time) for ranges, or exclude rules individually |
 
 ---
 
