@@ -108,6 +108,10 @@
   color: "0e8a16"
   description: Release v0.6
 
+- name: "v0.8"
+  color: "0e8a16"
+  description: Release v0.8 (latest)
+
 # Status
 - name: stale
   color: "ededed"
