@@ -31,7 +31,7 @@ The **Observe → Orient → Decide → Act** loop is the core methodology for a
 | **Observe** | Gather threat intel, CVE details, attack samples, PoC code | Web research, vendor advisories, NVD |
 | **Orient** | Map threat to ModSec variables/operators; check existing CRS coverage | CRS docs, `crs-toolchain util fp-finder`, Sandbox |
 | **Decide** | Choose strategy: single rule vs chain, PL placement, anomaly score, virtual-patch vs CRS contribution | [actions-reference.md](actions-reference.md), [anomaly-scoring.md](anomaly-scoring.md) |
-| **Act** | Write → validate → lint → test → deploy | `validate_rule.py`, `lint_regex.py`, `go-ftw`, `docker compose` |
+| **Act** | Write → validate → lint → test → deploy | `validate_rule.py` (crslang), `lint_regex.py`, `go-ftw`, `docker compose` |
 
 ### False Positive Tuning
 

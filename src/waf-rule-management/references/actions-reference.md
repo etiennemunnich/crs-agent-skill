@@ -86,11 +86,8 @@ SecRule REQUEST_URI "@beginsWith /api/search" \
     ctl:ruleRemoveTargetById=942100;ARGS:q"
 ```
 
-Use runtime exclusions before CRS include; configure-time exclusions after CRS include.
+Placement: runtime → BEFORE-CRS (phase 1); configure-time → AFTER-CRS. See [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md#6-quick-reference-exclusion-placement).
 
-## References
+## Related
 
-- ModSecurity v3 Reference Manual: actions and directives
-- `best-practices-modsec-coraza-crs.md`
-- `antipatterns-and-troubleshooting.md`
-- `false-positives-and-tuning.md`
+[antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) | [false-positives-and-tuning.md](false-positives-and-tuning.md)

@@ -1,0 +1,91 @@
+openapi: "3.0.0"
+info:
+  title: Payment API
+  version: "1.0.0"
+  description: >
+    Internal payment processing API. All endpoints require authentication.
+    Consumed exclusively by our React frontend SPA (no third-party clients).
+
+paths:
+  /api/payments:
+    post:
+      summary: Create a new payment
+      description: Initiates a payment transaction. Body must be JSON.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, currency, recipient_id]
+              properties:
+                amount:
+                  type: number
+                  minimum: 0.01
+                currency:
+                  type: string
+                  enum: [USD, EUR, GBP]
+                recipient_id:
+                  type: string
+                  format: uuid
+                note:
+                  type: string
+                  maxLength: 255
+      security:
+        - BearerAuth: []
+      responses:
+        "201":
+          description: Payment created
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+
+  /api/payments/{id}:
+    get:
+      summary: Get payment by ID
+      description: Retrieve details for a specific payment. ID must be a positive integer.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payment record ID (positive integer)
+          schema:
+            type: integer
+            minimum: 1
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Payment details
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+
+    delete:
+      summary: Cancel a payment
+      description: Cancel a pending payment by ID. Only pending payments can be cancelled.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Payment cancelled
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

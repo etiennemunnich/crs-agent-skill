@@ -58,7 +58,7 @@ Before pushing a branch, run locally:
 > **Container runtime**: All `docker` commands below work with `finch` as a drop-in replacement.
 
 ```bash
-# Validate syntax
+# Validate syntax (crslang primary)
 python scripts/validate_rule.py rules/*.conf
 
 # Lint CRS conventions
@@ -82,7 +82,7 @@ Run on every pull request. Fast, no containers needed:
 ```yaml
 # Example CI step (GitHub Actions / GitLab CI / etc.)
 - name: Validate rules
-  run: python scripts/validate_rule.py rules/*.conf
+  run: python scripts/validate_rule.py rules/*.conf   # crslang primary
 
 - name: Lint CRS conventions
   run: python scripts/lint_crs_rule.py rules/*.conf -o text

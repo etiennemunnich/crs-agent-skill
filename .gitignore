@@ -1,76 +1,45 @@
-research/
-
-# macOS
-.DS_Store
-
-# IDEs and editors
-.idea/
-.vscode/
-
-# Agent skill directories (created by consumers installing this skill)
-.agents/
-.claude/
-.cline/
-.clinerules/
-.copilot/
-.cursor/
-.gemini/
-.kiro/
-.roo/
-.windsurf/
-*.swp
-*.swo
-*~
-
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+*.pyo
 *.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
 .venv/
 venv/
-ENV/
-env/
-
-# Test and coverage
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-
-# Logs and temp
-*.log
-*.tmp
-*.temp
-/tmp/
-/temp/
-
-# Local overrides
 .env
-.env.local
-*.local
 
-# Docker
-.docker/
+# Generated eval and workspace artifacts (not part of skill distribution)
+crs-eval-review*.html
+iteration-*-eval-viewer.html
+iteration-*-benchmark.json
+crs-skill-assessment-report.md
+eval-viewer.html
 
-# Incident workspaces — excluded entirely (sensitive probe data, audit logs, creds)
-**/incidents/
+# Incident workspace outputs (generated at runtime)
+src/waf-rule-management/incidents/*/
+
+# Audit logs (generated at runtime)
+src/waf-rule-management/*.log
+
+# Temporary rule files from eval runs
+src/waf-rule-management/current_rule.conf
+src/waf-rule-management/improved_rule.conf
+
+# macOS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# AI assistant config (local only)
+.claude/
+.cursor/
+
+# Research / scratch (local only)
+research/
+
+# Docker runtime artifacts
+src/waf-rule-management/assets/docker/.env
+src/waf-rule-management/assets/docker/custom-rules.conf
+
+# Node
+node_modules/

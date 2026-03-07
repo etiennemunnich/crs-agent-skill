@@ -1,6 +1,6 @@
 # ModSecurity Operators and Transforms
 
-Complete reference for operators and transforms used in ModSecurity v3 and Coraza rules.
+Complete reference for operators and transforms used in ModSecurity v3 and Coraza rules. **Performance**: Prefer `@pm`, `@streq`, `@beginsWith`, `@contains` over `@rx` when they suffice — faster and no ReDoS risk. See [regex-steering-guide.md](regex-steering-guide.md) for full guidance.
 
 **Verified against**: ModSecurity v3.0.14, Coraza v3.3.3, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
 
@@ -103,6 +103,14 @@ t:urlDecodeUni,t:lowercase
 t:lowercase,t:urlDecodeUni
 ```
 
+### Transform Order Pitfalls (Encoding FPs)
+
+For rules 941xxx or 942xxx when payload contains non-ASCII (Cyrillic, Chinese, Bengali):
+
+- **`t:utf8toUnicode` + `t:urlDecodeUni` on already-UTF-8 input** — Can corrupt data and produce false matches. Example: Cyrillic "имо" → `8<>` triggers XSS/SQLi patterns.
+- **Inspect the rule's transform stack** — Use CRS rule file or `analyze_log.py --explain-rule <ID>`.
+- **Exclusion** — `ctl:ruleRemoveTargetById` for the affected param, or URI-scoped `ctl:ruleRemoveById`.
+
 ### Recommended Transform Stacks
 
 | Context | Transform Stack |
@@ -130,6 +138,7 @@ t:lowercase,t:urlDecodeUni
 - **Implicit `@rx`** — always write the operator name explicitly.
 - **`@rx` for exact strings** — use `@streq` instead.
 - **Wrong transform order** — `t:lowercase` before `t:urlDecodeUni` corrupts data.
+- **`t:utf8toUnicode` + `t:urlDecodeUni` on already-UTF-8 input** — corrupts non-ASCII and causes encoding FPs (e.g. Cyrillic "имо" → `8<>`).
 - **Too many transforms** — start with the minimum needed; add only for specific evasion vectors.
 - **`t:base64Decode` without checking** — can produce garbled output on non-base64 input.
 - **PCRE-only features in portable rules** — lookahead/lookbehind don't work in Coraza RE2 mode.

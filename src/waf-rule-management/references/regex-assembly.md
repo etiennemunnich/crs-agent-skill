@@ -1,6 +1,6 @@
 # Regex Assembly (.ra Files)
 
-CRS uses `.ra` (regex assembly) files to build complex, maintainable regexes via `crs-toolchain`. This separates human-readable pattern components from the optimized PCRE output.
+CRS uses `.ra` (regex assembly) files to build complex, maintainable regexes via [crs-toolchain](crs-toolchain-reference.md). This separates human-readable pattern components from the optimized PCRE output.
 
 **Verified against**: crs-toolchain v2.7.0, CRS v4.23.0.
 
@@ -69,6 +69,8 @@ substring
 
 ## Workflow
 
+All commands require a CRS checkout. Full CLI reference: [crs-toolchain-reference.md](crs-toolchain-reference.md).
+
 ```bash
 # Generate optimized regex from .ra file
 crs-toolchain regex generate 942170
@@ -112,6 +114,15 @@ coreruleset/
 
 ---
 
+## When to Use Regex Assembly
+
+| Situation | Use .ra? | Why |
+|-----------|----------|-----|
+| 5+ alternations, complex pattern | **Yes** | Maintainability, crs-toolchain optimization |
+| Fixed word list (< ~50 words) | **No** | Use `@pm` — faster, no ReDoS risk |
+| Simple substring or prefix | **No** | Use `@contains` or `@beginsWith` |
+| CRS contribution with shared patterns | **Yes** | define/include reuse, fp-finder workflow |
+
 ## Best Practices
 
 - **Use `.ra` for any non-trivial regex** — if a pattern has more than ~5 alternations, use assembly.
@@ -121,6 +132,12 @@ coreruleset/
 - **Keep patterns sorted** — use `crs-toolchain regex format` for consistency.
 - **Comment intent** — use `##!` comments to explain why a pattern exists.
 - **Commit `.ra` alongside rule changes** — they must stay in sync.
+
+### Performance
+
+- **crs-toolchain optimizes output** — generated PCRE has minimal alternation; prefer assembly over hand-written long regexes.
+- **Avoid over-broad patterns in define blocks** — each line becomes alternation; add only what's needed for detection.
+- **ReDoS and operator choice** — see [regex-steering-guide.md](regex-steering-guide.md) for patterns to avoid and when to use `@pm` instead of `@rx`.
 
 ## What to Avoid
 
@@ -134,8 +151,8 @@ coreruleset/
 
 ## Related References
 
-- [crs-toolchain-reference.md](crs-toolchain-reference.md) — Full CLI reference for crs-toolchain
-- [regex-steering-guide.md](regex-steering-guide.md) — ReDoS prevention, operator selection, transforms
+- [crs-toolchain-reference.md](crs-toolchain-reference.md) — Full CLI reference (regex generate/compare/update, fp-finder)
+- [regex-steering-guide.md](regex-steering-guide.md) — Effective + performant rules, ReDoS, operator selection, transforms
 - [crs-rule-format.md](crs-rule-format.md) — CRS contribution format
 - CRS Regex Assembly docs: https://coreruleset.org/docs/development/regex_assembly/
 - crs-toolchain: https://github.com/coreruleset/crs-toolchain

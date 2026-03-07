@@ -12,7 +12,7 @@ go install github.com/coreruleset/crs-toolchain/v2@latest
 
 ## Regex Assembly
 
-Complex regexes are built from `.ra` (regex assembly) files. Commands:
+Complex regexes are built from `.ra` (regex assembly) files. See [regex-assembly.md](regex-assembly.md) for format and when to use; [regex-steering-guide.md](regex-steering-guide.md) for ReDoS prevention and operator choice. Commands:
 
 ```bash
 # Generate optimized regex from .ra file
@@ -50,7 +50,7 @@ crs-toolchain util fp-finder --help
 ## Best Practices
 
 - Always run from a **CRS repo checkout** — commands like `regex generate 942170` expect `.ra` files in `regex-assembly/`.
-- Use `regex compare` before `regex update` to review changes.
+- **Iteration**: `regex compare` → `fp-finder` → (fix) → `regex update`. Never `regex update` without `regex compare` first.
 - Run `fp-finder` on every new or modified regex before merging — catches common words that would trigger false positives.
 - Pin `crs-toolchain` version in CI to avoid unexpected behavior from upstream changes.
 - Use `regex format` to normalize `.ra` files before committing.
@@ -64,8 +64,8 @@ crs-toolchain util fp-finder --help
 
 ## Related References
 
-- [regex-assembly.md](regex-assembly.md) — `.ra` file format and processors
-- [regex-steering-guide.md](regex-steering-guide.md) — Regex quality and ReDoS prevention
+- [regex-assembly.md](regex-assembly.md) — `.ra` file format, processors, when to use
+- [regex-steering-guide.md](regex-steering-guide.md) — Effective + performant rules, ReDoS, operator choice
 - [crs-rule-format.md](crs-rule-format.md) — CRS contribution conventions
 - [go-ftw-reference.md](go-ftw-reference.md) — Testing after regex changes
 

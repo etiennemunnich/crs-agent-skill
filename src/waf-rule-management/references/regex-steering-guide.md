@@ -1,54 +1,36 @@
 # Regex Steering Guide for WAF Rules
 
-Ensures WAF rules are **effective** (detection), **performant** (no ReDoS), and **maintainable**. Use when writing, reviewing, or optimizing rules with `@rx`, transforms, or regex assembly.
+Ensures WAF rules are **effective** (detect attacks), **performant** (no ReDoS, efficient operators), and **maintainable**. Use when writing, reviewing, or optimizing rules with `@rx`, transforms, or regex assembly.
+
+**Core principle**: Prefer `@pm`/`@streq`/`@beginsWith`/`@contains` when they suffice — faster and no ReDoS risk. Use `@rx` only when pattern structure is needed.
 
 **Verified against**: ModSecurity v3.0.14, Coraza v3.3.3, CRS v4.23.0 (Feb 2025).
 
 ---
 
-## 1. PCRE2 Migration (Current)
+## 1. PCRE2 (Current Default)
 
-### What Changed
+**PCRE2 is the default regex engine** for ModSecurity v2 and v3 ([announcement](https://modsecurity.org/20250217/use-pcre2-as-default-2025-february/)). ModSecurity v3 uses compile-time limits; no runtime PCRE directives. Rules must be ReDoS-free.
 
-As of February 2025, **PCRE2 is becoming the default regex engine** for both ModSecurity v3 (libmodsecurity3) and ModSecurity v2 (mod_security2). Previously both defaulted to PCRE1 (also called "PCRE3" in some contexts).
-
-- **Announcement**: https://modsecurity.org/20250217/use-pcre2-as-default-2025-february/
-- **Implementation PR**: https://github.com/owasp-modsecurity/ModSecurity/pull/3321
-- **Compile flags**: `--with-pcre2` (opt-in now, will be default in next releases); `--with-pcre` (legacy fallback)
+**Migrating from PCRE1?** See [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md#5-pcre1-to-pcre2-migration).
 
 ### Impact on Rule Writers
 
-| Area | PCRE1 (legacy) | PCRE2 (current) | Action |
-|------|----------------|-----------------|--------|
-| Possessive quantifiers | `++`, `*+` supported | `++`, `*+` supported | No change |
-| Atomic groups | `(?>...)` supported | `(?>...)` supported | No change |
-| Named captures | `(?P<name>...)` | `(?P<name>...)` or `(?<name>...)` | Both work in PCRE2 |
-| `\K` (keep) | Supported | Supported | No change |
-| Unicode properties | Limited (`\p{L}`) | Full Unicode support (`\p{Script=...}`) | PCRE2 is more capable |
-| JIT compilation | Available (`pcre_jit`) | Available (`pcre2_jit_compile`) | Different API, same concept |
-| Match limits | `SecPcreMatchLimit` (v2 only) | PCRE2 has `pcre2_set_match_limit()` | v3 uses compile-time limits |
-| Backtracking limits | `SecPcreMatchLimitRecursion` (v2) | `pcre2_set_depth_limit()` | PCRE2 separates depth from match |
-| `\R` (line ending) | Supported | Supported | No change |
-| Callouts | Rarely used | Different API | Avoid in WAF rules |
+| Area | PCRE2 | Action |
+|------|-------|--------|
+| Possessive quantifiers, atomic groups | `++`, `*+`, `(?>...)` supported | No change |
+| Named captures | `(?P<name>...)` or `(?<name>...)` | Both work |
+| Unicode | Full `\p{Script=...}` support | PCRE2 is more capable |
+| Match limits (v3) | Compile-time only | No runtime config; rules must be ReDoS-free |
+| Coraza | RE2 by default; no lookahead/lookbehind | Avoid PCRE-only features for portability |
 
-### Migration Steps
+### PCRE Limits by Engine
 
-1. **Check your ModSecurity build**: `modsecurity -v` or check compile flags. If built with `--with-pcre2`, you're already on PCRE2.
-2. **Test existing rules**: Run your full regression suite (`go-ftw`) against a PCRE2-compiled ModSecurity. Most rules work unchanged.
-3. **Watch for edge cases**:
-   - PCRE2 is stricter about some invalid patterns that PCRE1 silently accepted.
-   - Unicode handling may differ for non-ASCII payloads.
-   - JIT behavior differences may affect timing-sensitive ReDoS tests.
-4. **Update ReDoS testing**: PCRE2's `pcre2_set_depth_limit()` and `pcre2_set_match_limit()` provide better backtracking control than PCRE1.
-5. **Coraza note**: Coraza uses Go's `regexp` (RE2-based) by default, which does not support PCRE features like lookahead/lookbehind. Coraza also supports PCRE via cgo. Rules intended for both engines should avoid PCRE-only features.
-
-### Legacy PCRE1 Context
-
-If you or your users are still on PCRE1 (older ModSecurity builds):
-
-- **ModSecurity 2.x**: `SecPcreMatchLimit` and `SecPcreMatchLimitRecursion` (default 1000) stop runaway matches. Increase only if needed; prefer fixing the regex.
-- **ModSecurity 3.x (PCRE1 build)**: Limits are compile-time; no runtime config. ReDoS is a bigger risk — rules must be ReDoS-free.
-- To continue using PCRE1, compile with `--with-pcre`. This remains supported.
+| Engine | Limit mechanism |
+|--------|-----------------|
+| ModSecurity v3 (PCRE2) | Compile-time; no runtime config |
+| ModSecurity v2 | `SecPcreMatchLimit`, `SecPcreMatchLimitRecursion` (v2-only directives) |
+| Coraza (RE2) | Linear-time; no ReDoS risk |
 
 ---
 
@@ -72,20 +54,10 @@ CRS has had ReDoS CVEs: CVE-2019-11387 through CVE-2019-11391; CVE-2020-15598 in
 
 ### Safer Alternatives
 
-- **Possessive quantifiers** (`++`, `*+`) or **atomic groups** (`(?>...)`) — supported in both PCRE1 and PCRE2; prevents backtracking into the group.
+- **Possessive quantifiers** (`++`, `*+`) or **atomic groups** (`(?>...)`) — supported in PCRE2; prevents backtracking into the group.
 - **Single quantifier** — Replace `(a+)+` with `a+` when equivalent.
 - **Mutually exclusive alternation** — `(foo\|bar)` is fine; avoid `(a\|ab)`.
 - **Anchors** — `^` and `$` can help limit backtracking scope.
-
-### PCRE Limits by Engine
-
-| Engine | Limit mechanism | Notes |
-|--------|----------------|-------|
-| ModSecurity 2.x | `SecPcreMatchLimit`, `SecPcreMatchLimitRecursion` | Runtime config, default 1000 |
-| ModSecurity 3.x (PCRE1) | Compile-time only | No runtime config; rules must be ReDoS-free |
-| ModSecurity 3.x (PCRE2) | `pcre2_set_match_limit()`, `pcre2_set_depth_limit()` | Better granularity than PCRE1 |
-| Coraza (RE2) | Linear-time guarantee | No backtracking by design; no ReDoS risk |
-| Coraza (PCRE via cgo) | Depends on PCRE version | Same risks as ModSecurity |
 
 ### Sources
 
@@ -128,7 +100,7 @@ Use `@rx` when you need:
 
 If rules must work on both ModSecurity and Coraza (RE2):
 
-| Feature | PCRE1/PCRE2 | RE2 (Coraza default) |
+| Feature | PCRE2 (ModSec) | RE2 (Coraza default) |
 |---------|-------------|----------------------|
 | Lookahead `(?=...)` | Yes | **No** |
 | Lookbehind `(?<=...)` | Yes | **No** |
@@ -140,7 +112,7 @@ If rules must work on both ModSecurity and Coraza (RE2):
 | Character classes | Yes | Yes |
 | Alternation | Yes | Yes |
 
-**Rule of thumb**: If portability matters, write RE2-compatible patterns. If ModSecurity-only, use possessive quantifiers and atomic groups for performance.
+**Rule of thumb**: If portability matters, write RE2-compatible patterns. If ModSecurity-only (PCRE2), use possessive quantifiers and atomic groups for performance.
 
 ---
 
@@ -186,9 +158,9 @@ Transforms apply **left to right**. Order affects both detection and performance
 
 ## 5. Regex Assembly (.ra Files)
 
-For CRS development, complex regexes are built from `.ra` (regex assembly) files. This enables:
+For CRS development, complex regexes are built from `.ra` (regex assembly) files via [crs-toolchain](crs-toolchain-reference.md). This enables:
 
-- **Maintainability** — Human-readable components, processors
+- **Maintainability** — Human-readable components, processors ([regex-assembly.md](regex-assembly.md))
 - **Optimization** — crs-toolchain generates optimized PCRE
 - **Testing** — Compare generated vs current, run fp-finder
 
@@ -199,8 +171,7 @@ crs-toolchain regex update 942170     # Update rule file
 crs-toolchain regex format 942170     # Format .ra file
 ```
 
-See [crs-toolchain-reference.md](crs-toolchain-reference.md) for full CLI reference.
-See [regex-assembly.md](regex-assembly.md) for `.ra` file format and processors.
+See [crs-toolchain-reference.md](crs-toolchain-reference.md) for full CLI reference; [regex-assembly.md](regex-assembly.md) for `.ra` format, processors, and when to use.
 
 ### .ra Best Practices
 
@@ -210,40 +181,46 @@ See [regex-assembly.md](regex-assembly.md) for `.ra` file format and processors.
 
 ---
 
-## 6. Testing Regex Rules
+## 6. Tooling and Iteration
 
-### lint_regex.py
+### Tool Matrix
 
-```bash
-python scripts/lint_regex.py rule.conf -v
-python scripts/lint_regex.py rule.conf -v --strict   # CRS strictness
-```
+| Tool | Purpose | When |
+|------|---------|------|
+| `lint_regex.py` | ReDoS heuristics, operator hints | Every change; CI |
+| `crs-toolchain regex compare` | Diff generated vs current | Before `regex update` |
+| `crs-toolchain util fp-finder` | FP candidate words | After regex change |
+| **msc_retest** | Match timing (ModSec-like) | ReDoS suspect; compare variants |
+| `go-ftw run` | Regression | After any change |
+| `go-ftw quantitative` | Throughput / detection rate | Rule/version comparison |
 
-### msc_retest
+### Iteration Loop
 
-[msc_retest](https://github.com/digitalwave/msc_retest) mimics ModSecurity 2.x and 3.x regex behavior for performance testing:
+1. Edit → `lint_regex.py -v --strict`
+2. (CRS) `regex compare` → `fp-finder` → `regex update` if satisfied
+3. `go-ftw run` regression
+4. If performance concern: msc_retest with adversarial payload (e.g. `"a"*30+"X"` for `(a+)+`)
 
-```bash
-echo "payload" | pcre4msc2 pattern.txt        # ModSec 2.x behavior
-echo "payload" | pcre4msc3 pattern.txt        # ModSec 3.x behavior
-echo "payload" | pcre4msc2 -n 10 -j pattern.txt  # n iterations, JIT
-```
-
-- **pcre4msc2** — ModSecurity 2.x behavior; `-j` for JIT.
-- **pcre4msc3** — ModSecurity 3.x behavior; `-f` for broken CVE-2020-15598 mode (for testing).
-
-### go-ftw + CRS Sandbox
+### Commands
 
 ```bash
+python scripts/lint_regex.py rule.conf -v --strict
+crs-toolchain regex compare 942170 && crs-toolchain util fp-finder 942170
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/
-curl -H "x-format-output: txt-matched-rules" "https://sandbox.coreruleset.org/?payload"
+go-ftw quantitative -C /path/to/coreruleset -s 10K -r 942100   # rule comparison
 ```
+
+### msc_retest (Performance)
+
+[msc_retest](https://github.com/digitalwave/msc_retest): `echo "payload" | pcre4msc3 pattern.txt`. Use `-n 1000 -j` for iterations + JIT. ReDoS test: long input that forces backtracking (e.g. 30×`a`+`X` for `(a+)+`).
 
 ### ReDoS Payload Testing
 
-Craft inputs that exploit nested quantifiers, e.g. for `(a+)+` use `"a" * 30 + "X"`. If response time spikes, the pattern is vulnerable.
+Craft inputs that exploit nested quantifiers. For `(a+)+` use `"a"*30+"X"`. If response time spikes, the pattern is vulnerable.
 
-For PCRE2 builds, also test with `pcre2_set_match_limit()` to verify limits are effective.
+### Online Tools (Exploration Only)
+
+regex101.com, regexr.com — use for structure/debug. PCRE flavor differs from PCRE2; not authoritative for ModSec.
 
 ---
 
@@ -257,7 +234,7 @@ For PCRE2 builds, also test with `pcre2_set_match_limit()` to verify limits are 
 | Missing `t:urlDecodeUni` on ARGS | Encoded payloads bypass |
 | Over-broad variable | Use `ARGS:param` not `ARGS` when possible |
 | Lookahead/lookbehind in portable rules | PCRE-only; avoid for Coraza/RE2 portability |
-| Assuming PCRE1 is still default | Check your ModSec build; PCRE2 is now default |
+| Assuming PCRE1 is still default | PCRE2 is default; see [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md#5-pcre1-to-pcre2-migration) |
 | Not testing regex against PCRE2 | Run regression after upgrading ModSecurity |
 
 ---
@@ -268,19 +245,20 @@ For PCRE2 builds, also test with `pcre2_set_match_limit()` to verify limits are 
 - [ ] If `@rx`: no nested quantifiers, no explosive patterns
 - [ ] Transforms: only those needed; correct order
 - [ ] Narrow variable (e.g. `ARGS:id` not `ARGS`)
-- [ ] Run `lint_regex.py` or equivalent
+- [ ] Run `lint_regex.py`; (CRS) `regex compare` + `fp-finder`
 - [ ] Test with go-ftw; include adversarial payloads
 - [ ] For CRS: use .ra + crs-toolchain for complex patterns
 - [ ] If targeting both engines: verify RE2 compatibility (no lookahead/lookbehind)
-- [ ] If upgrading to PCRE2: run full regression to catch edge cases
+- [ ] If migrating from PCRE1: run full regression; see [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md#5-pcre1-to-pcre2-migration)
 
 ---
 
 ## Related References
 
 - [operators-and-transforms.md](operators-and-transforms.md) — Full operator/transform tables
-- [crs-toolchain-reference.md](crs-toolchain-reference.md) — crs-toolchain CLI
-- [regex-assembly.md](regex-assembly.md) — `.ra` file format
+- [crs-toolchain-reference.md](crs-toolchain-reference.md) — crs-toolchain CLI (regex generate/compare/update, fp-finder)
+- [regex-assembly.md](regex-assembly.md) — `.ra` file format, processors, when to use
+- [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md) — PCRE1→PCRE2 migration
 - [modsec-crs-testing-reference.md](modsec-crs-testing-reference.md) — Local testing setup
 - [coraza-testing-reference.md](coraza-testing-reference.md) — Cross-engine testing
 - ModSecurity v3 Reference Manual: https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)

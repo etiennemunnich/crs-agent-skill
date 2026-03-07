@@ -115,7 +115,7 @@ Use `scripts/assemble_rules.sh` to compose rules from incident workspaces into `
 ### 1. Validate rule syntax
 
 ```bash
-python scripts/validate_rule.py rule.conf
+python scripts/validate_rule.py rule.conf   # crslang primary
 python scripts/lint_regex.py rule.conf -v          # if rule uses @rx
 python scripts/lint_crs_rule.py rule.conf          # CRS convention check
 ```
@@ -233,11 +233,6 @@ See [coraza-testing-reference.md](coraza-testing-reference.md) for Coraza-specif
 
 ---
 
-## Related References
+## Related
 
-- [go-ftw-reference.md](go-ftw-reference.md) — Test file format, config, cloud mode
-- [crs-sandbox-reference.md](crs-sandbox-reference.md) — Sandbox API, headers, reproducible requests
-- [coraza-testing-reference.md](coraza-testing-reference.md) — Coraza cross-engine testing
-- [log-analysis-steering.md](log-analysis-steering.md) — Audit/error log analysis
-- [first-responder-risk-runbook.md](first-responder-risk-runbook.md) — Incident-driven testing workflow
-- [developer-security-workflow.md](developer-security-workflow.md) — CI/CD integration
+[go-ftw-reference.md](go-ftw-reference.md) | [coraza-testing-reference.md](coraza-testing-reference.md) | [crs-sandbox-reference.md](crs-sandbox-reference.md) | [baseline-testing-tools.md](baseline-testing-tools.md)

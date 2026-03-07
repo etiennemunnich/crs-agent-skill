@@ -57,6 +57,12 @@ curl -H "x-crs-version: 4.20.0" \
 For false-positive or rule-improvement tickets, do not rely on wrappers. Use raw `curl`
 with explicit method, headers, and body, then save request/response artifacts.
 
+**CRS issue templates** require a reproducible curl call. Use the appropriate template when filing:
+- [False positive](https://github.com/coreruleset/coreruleset/issues/new?template=01_false-positive.md) — legitimate traffic blocked
+- [False negative](https://github.com/coreruleset/coreruleset/issues/new?template=02_false-negative.md) — attack not blocked (evasion/bypass)
+
+CRS asks that you **test your curl against the Sandbox** before submitting. See [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md#8-reporting-to-crs-issue-template) for full template requirements.
+
 ### GET with explicit controls
 
 ```bash
@@ -146,13 +152,6 @@ Recommended ticket attachments:
 - Omitting `x-backend` when results differ between engines — default is Apache, which may not match your deployment.
 - Using wrapper scripts that hide the actual curl command — makes tickets hard to reproduce.
 
-## Related References
+## Related
 
-- [go-ftw-reference.md](go-ftw-reference.md) — Full regression testing locally
-- [coraza-testing-reference.md](coraza-testing-reference.md) — Cross-engine testing
-- [modsec-crs-testing-reference.md](modsec-crs-testing-reference.md) — Local ModSecurity + CRS setup
-- [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Common testing mistakes
-
-## Source
-
-- <https://coreruleset.org/docs/6-development/6-4-using-the-crs-sandbox/>
+[go-ftw-reference.md](go-ftw-reference.md) | [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) | [CRS Sandbox docs](https://coreruleset.org/docs/6-development/6-4-using-the-crs-sandbox/)

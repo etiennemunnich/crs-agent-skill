@@ -51,12 +51,9 @@ Rule 949110 blocks when inbound threshold exceeded. Rule 959100 blocks outbound.
 - Using anomaly scoring without sufficient logging/observability.
 - Applying one threshold policy across all apps without app-specific validation.
 
-## Related References
+## Related
 
-- [paranoia-levels.md](paranoia-levels.md) — PL rollout and per-PL score tracking
-- [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies to address scoring issues
-- [best-practices-modsec-coraza-crs.md](best-practices-modsec-coraza-crs.md) — Deployment and threshold guidance
-- [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Common threshold mistakes
+[paranoia-levels.md](paranoia-levels.md) | [false-positives-and-tuning.md](false-positives-and-tuning.md) | [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md)
 
 ## Source
 

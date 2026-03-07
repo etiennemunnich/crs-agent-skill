@@ -3,6 +3,8 @@
 Use this guide when legitimate traffic is blocked or heavily scored by CRS.
 Goal: reduce false positives while preserving detection depth.
 
+**Steering scope**: This reference describes mechanisms, process, and decision frameworks — not issue-specific examples. For concrete cases (e.g. a given CRS issue), use the process here and check CRS issues / user-provided context.
+
 **Verified against** (2026-02-15):
 - https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/
 - https://coreruleset.org/docs/4-about-plugins/4-1-plugins/
@@ -31,6 +33,35 @@ Before analyzing or writing any exclusion, collect the following. Without this c
 
 Ask the user for these details if they are not provided before proceeding.
 
+## FP Category Quick Routing
+
+When no CRS issue match is found, classify by symptom and route to the right approach:
+
+| Symptom | Likely category | Example rules | Reference |
+|---------|-----------------|---------------|-----------|
+| Non-ASCII (Cyrillic, Chinese, Bengali) in payload | Encoding / transform order | 941xxx, 942xxx | [operators-and-transforms.md](operators-and-transforms.md) — transform pitfalls |
+| Natural language ("watch has been used", "time based", place names) | Natural language / regex overmatch | 932xxx, 933xxx | `crs-toolchain util fp-finder`; target exclusion on param |
+| GraphQL query/body | GraphQL / structured query | 932xxx | URI-scoped `ctl:ruleRemoveById`; target exclusion may not work (phase ordering) |
+| "select", punctuation (`"! N`), apostrophe, Punycode in benign text | SQL keyword/pattern in text | 942xxx | Target exclusion on param; search CRS issues for rule ID |
+| Multipart with colons in header | Multipart / app-specific | 922xxx | JSF/form exclusion; URI-scoped |
+| Response body text ("file size is") | Response body | 953xxx | URI-scoped rule removal |
+| Different behavior across engines or CRS versions | Engine / platform | 932xxx | Engine-specific; check CRS version and release notes |
+| **FP after CRS upgrade** (e.g. "after v4.24.0, rule N fires") | Post-upgrade / regex-change | 942xxx, 932xxx | See [Post-Upgrade / Regex-Change FP](#post-upgrade--regex-change-fp) below |
+
+## Tiered FP Model (When Adding New Paths/Rules)
+
+When adding new detection (e.g. paths to restricted-files, new rules), categorize by FP risk:
+
+| Tier | FP risk | Action | Example |
+|------|---------|--------|---------|
+| **Tier 1** | Low | Block globally | Highly specific paths (e.g. `.claude/`, `.cursor/`) — rarely legitimate in URLs |
+| **Tier 2** | Medium | Alert / increase anomaly score (no block) | Generic names (e.g. `mcp.json`, `AGENTS.md`) — may be legitimate elsewhere |
+| **Tier 3** | High | Chained rules only — block only when path context matches | Generic config (e.g. `settings.local.json`) — block only inside known AI paths |
+
+Use **chained rules** for Tier 3: match generic filename only when the path contains a known AI directory (e.g. `/.claude/settings.local.json` → block; `/api/config.toml` → allow).
+
+---
+
 ## Production Rollout Strategy
 
 When adding CRS to **existing production traffic**, start with a high anomaly threshold to avoid blocking legitimate users while you tune. Lower the threshold iteratively as you fix false positives:
@@ -55,13 +86,27 @@ At each step: deploy, observe, tune away FPs, then lower. A threshold of 5 (defa
    - acceptable behavior to allow
    - unknown (needs app owner validation)
 5. Use `python scripts/analyze_log.py audit.log --explain-rule <RULE_ID> --detail` to capture exact target/payload evidence.
-6. Run `python scripts/detect_app_profile.py audit.log` to check if an official CRS app profile/plugin applies first.
-7. Apply the narrowest safe exclusion.
-8. Validate exclusion safety: `python scripts/validate_exclusion.py --input exclusion.conf`.
-9. Re-test:
-   - false-positive transaction passes
-   - known attack payloads are still detected/blocked
-10. Add regression coverage in `go-ftw` for the case.
+6. **Search CRS issues** — Check [coreruleset/coreruleset Issues](https://github.com/coreruleset/coreruleset/issues) for the rule ID. Similar FPs often have documented exclusion patterns or upstream fixes. **Post-upgrade FP?** — If the FP appeared after a CRS upgrade, follow [Post-Upgrade / Regex-Change FP](#post-upgrade--regex-change-fp) below. If reporting upstream, use the [CRS false-positive template](https://github.com/coreruleset/coreruleset/issues/new?template=01_false-positive.md) — see [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md#8-reporting-to-crs-issue-template).
+7. Run `python scripts/detect_app_profile.py audit.log` to check if an official CRS app profile/plugin applies first.
+8. Apply the narrowest safe exclusion.
+9. Validate exclusion safety: `python scripts/validate_exclusion.py --input exclusion.conf`.
+10. Re-test:
+    - false-positive transaction passes
+    - known attack payloads are still detected/blocked
+11. Add regression coverage in `go-ftw` for the case.
+
+## Post-Upgrade / Regex-Change FP
+
+When the user reports "after upgrading to vX.Y.Z, rule N fires" or "rule N started blocking after a recent update" — the FP may be a regression from a regex fix. Based on patterns from CRS issues (e.g. [#4502](https://github.com/coreruleset/coreruleset/issues/4502), [#4476](https://github.com/coreruleset/coreruleset/pull/4476)).
+
+**Additional capture**: CRS version before/after; **Matched Data** from log `[data "Matched Data: ..."]` — the minimal substring that triggered the regex.
+
+**Workflow**:
+1. **Trace to recent change** — Search CRS issues for rule ID; check PRs that fix/modify the rule ("fix(942200)", etc.); check [release notes](https://github.com/coreruleset/coreruleset/releases).
+2. **Analyze regex** — If CRS repo available: `git show v4.23.0:rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf | grep -A 5 "942200"` vs current; or `crs-toolchain regex compare 942200`, `crs-toolchain util fp-finder 942200`.
+3. **Variable-target check** — Rules designed for ARGS/body may overmatch on headers. `REQUEST_HEADERS:User-Agent` has different FP semantics (browser UAs like ", like Gecko) Chrome") than `ARGS:param`. Consider whether target exclusion works or URI-scoped `ctl:ruleRemoveById` is needed.
+4. **Immediate options** — **Downgrade** to the previous CRS version in production until upstream fixes (common when FPs are widespread, e.g. all Chrome UAs). Or **apply narrowest exclusion** — target exclusion if variable is static; otherwise URI-scoped `ctl:ruleRemoveById`. Document rule ID, URI, reason, CRS issue link.
+5. **Report upstream** — If widespread (e.g. all Chrome UAs): use [CRS false-positive template](https://github.com/coreruleset/coreruleset/issues/new?template=01_false-positive.md); **reference the PR** that introduced the change (e.g. "Regression from #4476"); test on [sandbox.coreruleset.org](https://sandbox.coreruleset.org/) first.
 
 ## Exclusion Decision Tree
 
@@ -88,9 +133,7 @@ Rule group details vary by CRS version; verify active files/rules in your runnin
 
 ### Placement Rules (Critical)
 
-- Runtime exclusions (`ctl:*`) go **before** CRS include.
-- Configure-time exclusions (`SecRuleRemove*`, `SecRuleUpdateTarget*`) go
-  **after** CRS include.
+Runtime (`ctl:*`) → BEFORE-CRS, **phase 1**. Configure-time (`SecRuleRemove*`, `SecRuleUpdateTarget*`) → AFTER-CRS. Full table: [antipatterns-and-troubleshooting.md#6-quick-reference-exclusion-placement](antipatterns-and-troubleshooting.md#6-quick-reference-exclusion-placement).
 
 ## Safe Exclusion Patterns
 
@@ -121,6 +164,8 @@ SecRuleUpdateTargetById 942440 "!REQUEST_COOKIES:/^uid_.*/"
 
 **Note**: Target exclusions apply only to the **first rule** in a chained rule. For chained rules where the problematic target is in a later rule, you may need `SecRuleRemoveById` or `ctl:ruleRemoveById` instead.
 
+**Dynamic variable keys** (e.g. array indices, generated param names): `ctl:ruleRemoveTargetById` does not support regex targets. `SecRuleUpdateTargetById` supports regex in the target but is configure-time and **global** — no URI scope. When the matched variable uses dynamic keys, prefer URI-scoped `ctl:ruleRemoveById` for the affected path.
+
 Configure-time, full rule removal (last resort):
 
 ```apache
@@ -129,12 +174,9 @@ SecRuleRemoveById 920273
 
 ## What to Avoid
 
-- Editing CRS rule files directly (creates an upgrade fork).
-- Using `ctl:ruleRemoveById` with rule ranges (e.g. `913000-913999`) — **ModSecurity v3 does not support ranges**; use `SecRuleRemoveById` (configure-time) for ranges, or exclude rules individually.
-- Global `SecRuleRemoveByTag attack-*` without tight justification.
-- Excluding by message (`ByMsg`) for core workflows; brittle and error-prone.
-- Skipping regression after exclusions.
-- Raising anomaly thresholds instead of fixing repeatable false positives.
+- Editing CRS rule files directly; global removal; excluding by msg; skipping regression; raising thresholds instead of fixing FPs.
+- Rule ranges in `ctl:ruleRemoveById` — ModSecurity v3 does not support; use `SecRuleRemoveById` (configure-time) or exclude individually.
+- Full antipattern catalog: [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md).
 
 ## Rule Exclusion Packages
 
@@ -161,11 +203,6 @@ Enable packages narrowly by app location whenever possible.
 - Check existing CRS exclusion packages before writing custom exclusions — they may already cover your app.
 - Re-run the full go-ftw suite after any exclusion change, not just the specific false-positive case.
 
-## Related References
+## Related
 
-- [crs-tune-rule-steering.md](crs-tune-rule-steering.md) — CRS groups, phases, request/response, version-aware tuning
-- [go-ftw-reference.md](go-ftw-reference.md) — Regression testing after tuning
-- [first-responder-risk-runbook.md](first-responder-risk-runbook.md) — Incident-driven tuning
-- [log-analysis-steering.md](log-analysis-steering.md) — Identifying false positives in logs
-- [crs-application-profiles.md](crs-application-profiles.md) — Pre-built exclusion packages
-- [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Exclusion antipatterns
+[antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) | [crs-tune-rule-steering.md](crs-tune-rule-steering.md) | [crs-application-profiles.md](crs-application-profiles.md) | [go-ftw-reference.md](go-ftw-reference.md)

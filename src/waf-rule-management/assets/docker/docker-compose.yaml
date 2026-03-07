@@ -31,6 +31,8 @@ services:
       ANOMALY_INBOUND: ${ANOMALY_INBOUND:-5}
       ANOMALY_OUTBOUND: ${ANOMALY_OUTBOUND:-4}
     volumes:
+      # Runtime exclusions (BEFORE CRS).
+      - ./REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:ro
       # Assembled custom rules (from incidents.d/*.conf).
       # The RESPONSE-999 prefix ensures loading after all standard CRS rules.
       - ./custom-rules.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-CUSTOM-RULES.conf:ro

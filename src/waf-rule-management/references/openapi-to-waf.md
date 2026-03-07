@@ -7,7 +7,7 @@ BEFORE CRS rules execute. The API contract defines what is allowed; CRS catches 
 
 ```bash
 python scripts/openapi_to_rules.py openapi.yaml -o before-crs-rules.conf
-python scripts/validate_rule.py before-crs-rules.conf
+python scripts/validate_rule.py before-crs-rules.conf   # crslang primary
 ```
 
 ## Inclusion Order (Critical)
@@ -315,7 +315,7 @@ in a successful chain triggers the disruptive action.
    - Add content types used in practice but missing from the spec.
    - Adjust auth header checks if the deployment uses a gateway/CDN for auth.
    - Remove required-param rules for params that are optional in practice.
-3. **Validate**: `python scripts/validate_rule.py before-crs-rules.conf`
+3. **Validate**: `python scripts/validate_rule.py before-crs-rules.conf` (crslang primary)
 4. **Lint regex**: `python scripts/lint_regex.py before-crs-rules.conf -v`
 5. **Test**: Write go-ftw tests covering both allowed and blocked requests:
    ```bash

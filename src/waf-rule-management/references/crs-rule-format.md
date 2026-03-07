@@ -1,6 +1,6 @@
 # CRS Rule Format and Contribution Guide
 
-Style and formatting requirements for writing CRS-compatible rules, whether for contribution upstream or for consistent custom rules.
+Style and formatting requirements for writing CRS-compatible rules, whether for contribution upstream or for consistent custom rules. Rules must be **effective** (detect) and **performant** (prefer `@pm` over `@rx`, no ReDoS). See [regex-steering-guide.md](regex-steering-guide.md) for operator choice and ReDoS prevention.
 
 **Verified against**: CRS v4.23.0, https://coreruleset.org/docs/development/.
 
@@ -190,7 +190,7 @@ For virtual-patch rules that must block immediately: use `deny,status:403` inste
 
 ```bash
 python scripts/lint_crs_rule.py rule.conf      # CRS convention check
-python scripts/validate_rule.py rule.conf       # Syntax validation
+python scripts/validate_rule.py rule.conf       # Syntax validation (crslang primary)
 ```
 
 ---
@@ -233,6 +233,7 @@ See https://coreruleset.org/docs/development/ for contribution guidelines.
 
 ## Related References
 
+- [crslang-reference.md](crslang-reference.md) — Primary validation; Seclang↔CRSLang conversion
 - [crs-tune-rule-steering.md](crs-tune-rule-steering.md) — How CRS rules work, groups, request/response, phases, version-aware tuning
 - [actions-reference.md](actions-reference.md) — Detailed action guidance
 - [regex-steering-guide.md](regex-steering-guide.md) — Regex quality and PCRE2

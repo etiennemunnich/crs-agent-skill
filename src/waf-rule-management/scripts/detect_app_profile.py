@@ -13,6 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from audit_log_parser import parse_json_log, parse_native_log
 
 PROFILE_PATTERNS = {
     "wordpress": {
@@ -80,60 +81,6 @@ def parse_args():
         help="Output format.",
     )
     return parser.parse_args()
-
-
-def parse_json_log(path: Path) -> List[Dict]:
-    content = path.read_text(encoding="utf-8", errors="replace").strip()
-    if not content:
-        return []
-    try:
-        parsed = json.loads(content)
-        if isinstance(parsed, list):
-            return [obj for obj in parsed if isinstance(obj, dict)]
-        if isinstance(parsed, dict):
-            return [parsed]
-    except json.JSONDecodeError:
-        pass
-    entries = []
-    for line in content.splitlines():
-        try:
-            obj = json.loads(line)
-            if isinstance(obj, dict):
-                entries.append(obj)
-        except json.JSONDecodeError:
-            continue
-    return entries
-
-
-def parse_native_log(path: Path) -> List[Dict]:
-    entries: List[Dict] = []
-    current: Dict[str, str] = {}
-    current_section = ""
-    section_re = re.compile(r"^--[0-9A-Za-z]+-([A-Z])--$")
-
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        m = section_re.match(line.strip())
-        if m:
-            section = m.group(1)
-            if section == "A":
-                if current:
-                    entries.append(current)
-                current = {}
-            elif section == "Z":
-                if current:
-                    entries.append(current)
-                current = {}
-                current_section = ""
-                continue
-            current_section = section
-            continue
-        if current_section:
-            existing = current.get(current_section, "")
-            current[current_section] = (existing + "\n" + line.rstrip()).strip("\n")
-
-    if current:
-        entries.append(current)
-    return entries
 
 
 def parse_native_request(entry: Dict) -> Tuple[str, Dict[str, str], Dict[str, str]]:

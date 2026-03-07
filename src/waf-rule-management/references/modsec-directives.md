@@ -2,7 +2,7 @@
 
 Key ModSecurity v3 directives for rule operations, engine configuration, and logging.
 
-**Verified against**: ModSecurity v3.0.14, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
+ModSecurity v3.0.14, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
 
 ---
 
@@ -13,9 +13,10 @@ Key ModSecurity v3 directives for rule operations, engine configuration, and log
 | `SecRuleEngine` | `On`, `Off`, `DetectionOnly` | Master switch. `DetectionOnly` logs but does not block — use for initial rollout. |
 | `SecRequestBodyAccess` | `On`, `Off` | Enable request body inspection (phase 2). Must be `On` for POST/PUT rule scanning. |
 | `SecResponseBodyAccess` | `On`, `Off` | Enable response body inspection (phase 4). Performance cost; enable only if needed. |
-| `SecRequestBodyLimit` | bytes | Max request body size. Requests exceeding this are rejected. Default: 13107200 (12.5 MB). |
+| `SecRequestBodyLimit` | bytes | Max **entire** request body size. Checked first. Exceeding → 413 or `SecRequestBodyLimitAction`. Default: 13107200 (12.5 MB). |
 | `SecResponseBodyLimit` | bytes | Max response body size for inspection. |
-| `SecRequestBodyNoFilesLimit` | bytes | Max body size excluding file uploads. Default: 131072 (128 KB). |
+| `SecRequestBodyNoFilesLimit` | bytes | Max body size **excluding file uploads** (JSON, XML, form fields, multipart headers/boundaries). Checked second. Default: 131072 (128 KB). |
+| `SecRequestBodyLimitAction` | `Reject`, `ProcessPartial` | `Reject` (default): 413 on limit exceed. `ProcessPartial`: inspect up to limit, **ignore rest** — evasion risk. |
 | `SecTmpDir` | path | Temp directory for request body buffering. Must be writable by the web server. |
 | `SecDataDir` | path | Persistent data directory for `initcol`/`setsid`. Must be writable. |
 
@@ -44,14 +45,18 @@ Key ModSecurity v3 directives for rule operations, engine configuration, and log
 | `SecDebugLog` | path | Debug log path (very verbose; use for troubleshooting only). |
 | `SecDebugLogLevel` | 0–9 | Debug verbosity. 0=off, 3=warnings, 5=detailed, 9=everything. |
 
-## PCRE Directives (v2 only)
+## Regex Engine (PCRE2)
+
+ModSecurity v3 uses **PCRE2** as the default regex engine ([announcement](https://modsecurity.org/20250217/use-pcre2-as-default-2025-february/)). Limits are compile-time; no runtime directives. Rules must be ReDoS-free — use [regex-steering-guide.md](regex-steering-guide.md) for operator choice and ReDoS prevention.
+
+**Migrating from PCRE1?** See [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md#5-pcre1-to-pcre2-migration).
+
+## PCRE Directives (v2 only — legacy)
 
 | Directive | Default | Purpose |
 |-----------|---------|---------|
-| `SecPcreMatchLimit` | 1000 | Max PCRE match attempts. Prevents ReDoS. |
-| `SecPcreMatchLimitRecursion` | 1000 | Max PCRE recursion depth. |
-
-**Note**: These are v2-only. ModSecurity v3 uses compile-time PCRE limits. As of 2025, v3 is transitioning to PCRE2 as the default engine. See [regex-steering-guide.md](regex-steering-guide.md) for PCRE2 migration.
+| `SecPcreMatchLimit` | 1000 | Max PCRE match attempts. Prevents ReDoS. v2 only. |
+| `SecPcreMatchLimitRecursion` | 1000 | Max PCRE recursion depth. v2 only. |
 
 ### PCRE Limit Tuning (v2)
 
@@ -76,9 +81,10 @@ Raise these limits **only** when audit logs confirm 200004 is triggering on legi
 - **Enable `SecRequestBodyAccess On`** — without it, POST/PUT payloads are invisible to rules.
 - **Use `JSON` audit log format** for automated analysis with `analyze_log.py` and `jq`.
 - **Set `SecAuditEngine RelevantOnly`** in production to avoid logging clean traffic.
-- **Keep `SecRequestBodyNoFilesLimit` reasonable** — 128 KB default is fine for most APIs.
+- **Keep `SecRequestBodyNoFilesLimit` reasonable** — 128 KB default is fine for most APIs. For JSON/XML/url-encoded, this is the effective limit (lower than 12.5 MB). For multipart, only non-file parts (headers, boundaries) count against it.
+- **Avoid `SecRequestBodyLimitAction ProcessPartial` in blocking mode** — data beyond the limit is not inspected; attackers can hide payloads after the cutoff. Use only in DetectionOnly for testing. See [ModSecurity blog: request body limits](https://modsecurity.org/20260222/how-big-is-too-big-a-deep-dive-into-modsecurity-request-body-limits/).
 - **Use `SecRuleUpdateTargetById`** for precise exclusions instead of removing entire rules.
-- **Place configure-time exclusions after CRS include**, runtime exclusions (`ctl:`) before CRS.
+- **Exclusion placement**: runtime (`ctl:*`) → BEFORE-CRS, phase 1; configure-time → AFTER-CRS. See [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md#6-quick-reference-exclusion-placement).
 
 ## What to Avoid
 
@@ -87,14 +93,11 @@ Raise these limits **only** when audit logs confirm 200004 is triggering on legi
 - **`SecDebugLogLevel` above 3 in production** — massive log volume, performance impact.
 - **Raising `SecPcreMatchLimit`** as a substitute for fixing ReDoS-prone regexes (v2) — raising is appropriate for the 200004 tracking-param FP class when regexes are sound.
 - **Missing `SecTmpDir`/`SecDataDir`** — causes silent failures for body buffering and persistent collections.
+- **`SecRequestBodyLimitAction ProcessPartial` in blocking mode** — evasion risk; data beyond the limit is not inspected.
 - **Editing CRS rule files directly** — use exclusion directives instead.
 
 ---
 
-## Related References
+## Related
 
-- [actions-reference.md](actions-reference.md) — Rule actions (`deny`, `chain`, `setvar`)
-- [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies
-- [regex-steering-guide.md](regex-steering-guide.md) — PCRE2 migration, ReDoS
-- ModSecurity v3 Reference Manual: https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)
-- ModSecurity v3 GitHub: https://github.com/owasp-modsecurity/ModSecurity
+[antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) | [false-positives-and-tuning.md](false-positives-and-tuning.md) | [regex-steering-guide.md](regex-steering-guide.md) | [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md#5-pcre1-to-pcre2-migration) | [ModSecurity v3 Reference](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)) | [PCRE2 default](https://modsecurity.org/20250217/use-pcre2-as-default-2025-february/) | [Request body limits](https://modsecurity.org/20260222/how-big-is-too-big-a-deep-dive-into-modsecurity-request-body-limits/)

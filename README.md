@@ -4,7 +4,7 @@
 [![CI](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml)
 [![Links](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml)
 [![Skill Validate](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml)
-[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.6-8A2BE2)](https://agentskills.io)
+[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.8-8A2BE2)](https://agentskills.io)
 
 Agent skill for writing, validating, testing, and tuning **ModSecurity v3**, **Coraza**, and **OWASP Core Rule Set (CRS)** WAF rules using AI coding assistants.
 
@@ -23,7 +23,7 @@ Agent skill for writing, validating, testing, and tuning **ModSecurity v3**, **C
 npx ai-agent-skills install etiennemunnich/crs-agent-skill --agent <agent>
 ```
 
-Replace `<agent>` with: `cursor`, `claude-code`, `cline`, `codex`, `copilot`, `gemini`, `kiro`, `roo-code`, `windsurf`, `vscode`, or `goose`.
+Replace `<agent>` with: `cursor`, `claude-code`, `cline`, `codex`, `copilot`, `gemini`, `kiro`, `roo-code`, `windsurf`, `opencode`, or `aider`.
 
 ### Per-Platform Manual Install
 
@@ -46,10 +46,32 @@ bash <SKILL_PATH>/src/waf-rule-management/scripts/install_tools.sh
 | [![Cline](https://img.shields.io/badge/Cline-EC6E2C?logo=cline&logoColor=white)](https://docs.cline.bot/features/skills) | `~/.cline/skills/waf-rule-management` |
 | [![Roo Code](https://img.shields.io/badge/Roo_Code-16A34A?logoColor=white)](https://docs.roocode.com/features/skills) | `~/.roo/skills/waf-rule-management` |
 | [![Windsurf](https://img.shields.io/badge/Windsurf-06B6D4?logo=codeium&logoColor=white)](https://docs.windsurf.com/windsurf/cascade/skills) | `~/.codeium/windsurf/skills/waf-rule-management` |
+| [![OpenCode](https://img.shields.io/badge/OpenCode-000000?logo=opencode&logoColor=white)](https://opencode.ai/) | `~/.opencode/skills/waf-rule-management` |
+| [![Aider](https://img.shields.io/badge/Aider-000000?logo=aider&logoColor=white)](https://aider.chat/) | Use `aider-skills` or clone into project; see [Aider docs](https://github.com/paul-gauthier/aider) |
+| [![Plandex](https://img.shields.io/badge/Plandex-000000?logo=plandex&logoColor=white)](https://plandex.ai/) | Clone into project; load skill via `.plandex/skills/` or project context |
+| [![AutoPR](https://img.shields.io/badge/AutoPR-000000?logo=github&logoColor=white)](https://github.com/irgolic/AutoPR) | Project-level; reference skill in repo for PR automation |
 
 > **Gemini CLI** also supports `gemini skills install https://github.com/etiennemunnich/crs-agent-skill.git`
 >
 > **Kiro** also supports importing via **Agent Steering & Skills > + > Import a skill** in the IDE.
+>
+> **Aider** users: install [aider-skills](https://pypi.org/project/aider-skills/) and use `to-prompt` or `--read` to inject skill context.
+>
+> **PraisonAI** and other multi-agent frameworks: reference the skill directory in agent context or system prompts.
+
+### Multi-agent and orchestration frameworks
+
+These frameworks don't use a skills directory; inject the skill via system prompts, context, or tool wrappers:
+
+| Framework | Use case | Integration |
+|-----------|----------|-------------|
+| [LangGraph](https://langchain-ai.github.io/langgraph/) | Graph-based multi-agent workflows, stateful orchestration | Add skill content to node prompts or system message |
+| [CrewAI](https://www.crewai.com/) | Role-based agent teams, task hierarchies | Reference skill in agent instructions or task context |
+| [AutoGen](https://microsoft.github.io/autogen/) | Conversational multi-agent coordination | Inject skill into system message or agent config |
+| [LlamaIndex](https://docs.llamaindex.ai/) | RAG + agents over data | Load skill as tool description or agent instructions |
+| [N8n](https://n8n.io/) | Low-code workflow automation with AI nodes | Use skill text in AI node prompts or custom tools |
+| [Strands](https://strandsagents.com/) | Python AI functions with post-conditions | Reference skill in function/system prompts |
+| [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/) | Microsoft's AI orchestration (plugins, planners) | Add skill as plugin or planner context |
 
 ### Included Scripts
 
@@ -62,9 +84,12 @@ All scripts live under `src/waf-rule-management/scripts/`.
 | `lint_regex.py` | ReDoS and regex performance linting |
 | `lint_crs_rule.py` | CRS convention checker (ID ranges, phases, actions, metadata) |
 | `analyze_log.py` | Audit log parser -- summaries, top triggered rules, per-rule detail |
+| `audit_log_parser.py` | Low-level audit log parser (native and JSON formats) |
 | `openapi_to_rules.py` | Convert OpenAPI 3.x specs into positive-security WAF rules |
 | `generate_ftw_test.py` | Generate go-ftw regression test YAML |
 | `generate_exclusion.py` | Generate false-positive exclusion rules |
+| `validate_exclusion.py` | Validate generated exclusion rules for correctness |
+| `detect_app_profile.py` | Detect application profile from traffic/log data |
 | `new_incident.sh` | Scaffold an incident response workspace |
 | `assemble_rules.sh` | Assemble active incident rules into `custom-rules.conf` |
 
@@ -97,7 +122,7 @@ When installed, your AI coding agent gains the ability to:
 
 ### Progressive Loading
 
-The skill uses **progressive context loading** -- only the routing index loads at startup. Full reference docs (27 files) load on-demand when your task needs them, keeping agent context lean and fast.
+The skill uses **progressive context loading** -- only the routing index loads at startup. Full reference docs (32 files) load on-demand when your task needs them, keeping agent context lean and fast.
 
 ---
 
@@ -121,18 +146,21 @@ src/waf-rule-management/
 │   ├── lint_regex.py           # ReDoS and regex performance lint
 │   ├── lint_crs_rule.py        # CRS convention checker
 │   ├── analyze_log.py          # Audit log parser
+│   ├── audit_log_parser.py     # Low-level audit log parser
 │   ├── openapi_to_rules.py     # OpenAPI → WAF rules converter
 │   ├── generate_ftw_test.py    # go-ftw test generator
 │   ├── generate_exclusion.py   # FP exclusion generator
+│   ├── validate_exclusion.py   # Exclusion rule validator
+│   ├── detect_app_profile.py   # App profile detector
 │   ├── new_incident.sh         # Incident workspace scaffolder
 │   └── assemble_rules.sh       # Multi-incident rule assembly
-├── references/                 # 27 on-demand reference docs
+├── references/                 # 32 on-demand reference docs
 │   ├── actions-reference.md
 │   ├── anomaly-scoring.md
 │   ├── crs-rule-format.md
 │   ├── go-ftw-reference.md
 │   ├── ... and 23 more
-│   └── variables-and-collections.md
+│   └── variables-and-collections.md   (and 31 more)
 └── assets/
     ├── mcp-servers.json        # MCP server config template
     └── docker/

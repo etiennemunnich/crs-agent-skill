@@ -1,0 +1,12 @@
+--abc123-A--
+[02/Aug/2016:09:57:47 +0300] V6BEawUs8J4AACcbno4AAAAE 177.80.183.159 43077 5.44.240.158 80
+--abc123-B--
+GET /api/search?q=select%201 HTTP/1.1
+Host: example.test
+User-Agent: test-agent
+--abc123-F--
+HTTP/1.1 403 Forbidden
+Content-Type: text/plain
+--abc123-H--
+Message: Warning. Pattern match "select" at ARGS:q. [id "942100"] [msg "SQL Injection Attack Detected"] [data "Matched Data: select found within ARGS:q: select 1"] [tag "attack-sqli"]
+--abc123-Z--

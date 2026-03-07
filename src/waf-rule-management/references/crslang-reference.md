@@ -2,10 +2,11 @@
 
 ## Overview
 
-[CRSLang](https://github.com/coreruleset/crslang) is the next-generation representation for OWASP CRS rules. It abstracts Seclang into a modern YAML format for better maintainability, tooling, and analysis.
+[CRSLang](https://github.com/coreruleset/crslang) is the next-generation representation for OWASP CRS rules. It abstracts Seclang into a modern YAML format for better maintainability, tooling, and analysis. **crslang is the primary Seclang parser/validator** — use it ahead of modsec-rules-check and rules-check.
 
-## Why CRSLang?
+## Why CRSLang First?
 
+- **Primary validation** — `validate_rule.py` uses crslang first; legacy tools are fallback only
 - **Language independence** — Not tied to Seclang syntax
 - **Bidirectional conversion** — Seclang ↔ CRSLang
 - **Improved readability** — YAML structure with metadata, conditions, actions
@@ -14,11 +15,25 @@
 ## Installation
 
 ```bash
+bash scripts/install_tools.sh   # Installs crslang as required
+# Or manually:
 git clone https://github.com/coreruleset/crslang
 cd crslang
 go build
-# Add ./crslang to PATH or use full path
+# Binary: ./crslang or $(go env GOPATH)/bin/crslang
 ```
+
+## Expected Workflows
+
+| Workflow | Use crslang | Command |
+|----------|-------------|---------|
+| **Syntax validation** | Primary | `python scripts/validate_rule.py rule.conf` (uses crslang first) |
+| **New rule** | After writing | `validate_rule.py` → `lint_regex.py` → `go-ftw` |
+| **Migration** | First-pass parse | `validate_rule.py` on migrated rules; see [modsecurity-migration-checklist.md](modsecurity-migration-checklist.md) |
+| **CRS contribution** | Before PR | `validate_rule.py` + `lint_crs_rule.py`; see [crs-contribution-workflow.md](crs-contribution-workflow.md) |
+| **Seclang → YAML** | Direct | `crslang -o output_name path/to/rules` |
+| **YAML → Seclang** | Direct | `crslang -s input.yaml -o output_dir/` |
+| **Programmatic analysis** | Convert first | `crslang -o rules path/to/crs` then inspect YAML |
 
 ## Usage
 
@@ -77,16 +92,17 @@ crslang -s input.yaml -o output_dir/
 
 ## Best Practices
 
-- Use crslang for **syntax validation** as a first-pass check — parse success implies valid Seclang.
+- **Always use crslang first** for syntax validation — `validate_rule.py` does this automatically.
 - Convert rules to YAML for programmatic analysis (counting rules, checking tags, extracting IDs) rather than fragile regex parsing of `.conf` files.
 - Keep the original Seclang as the source of truth; use CRSLang as a tool, not a replacement format (unless the CRS project officially migrates).
 - Pin the crslang binary version in CI for reproducible results.
+- Run `validate_rule.py` (which uses crslang) before `lint_regex.py` and `go-ftw` in every rule workflow.
 
 ## What to Avoid
 
+- **Skipping crslang** — Use `validate_rule.py` (crslang first); do not rely on legacy modsec-rules-check alone.
 - Editing CRSLang YAML and converting back without verifying equivalence — round-trip may not preserve comments or whitespace.
-- Relying on crslang for features it doesn't support yet (check the GitHub issues/README for known limitations).
-- Using crslang as the only validation tool — combine with `validate_rule.py` and `modsec-rules-check` for defense in depth.
+- Relying on crslang for features it doesn't support yet (check the [GitHub issues](https://github.com/coreruleset/crslang/issues) for known limitations).
 
 ## Related References
 

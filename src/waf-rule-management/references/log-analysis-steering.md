@@ -226,6 +226,8 @@ tail -500 error.log | grep -E 'ModSecurity|denied|block'
 | "Top IPs hitting the WAF" | CLI: Section A IP extraction or jq for JSON |
 | "Which rules fire most?" | `analyze_log.py --top-rules 20` or grep rule IDs |
 | "Why is X blocked?" | `analyze_log.py --explain-rule N --detail` then `--rule-id N --detail` for raw samples |
+| "False positive" / "legitimate traffic blocked" | Identify rule ID → suggest [CRS Issues](https://github.com/coreruleset/coreruleset/issues) search; then exclusion workflow. If reporting upstream → [false-positive template](https://github.com/coreruleset/coreruleset/issues/new?template=01_false-positive.md) |
+| "Attack not blocked" / "evasion" | Identify rule ID → suggest CRS Issues search for bypass reports; then phase/transform check. If reporting upstream → [false-negative template](https://github.com/coreruleset/coreruleset/issues/new?template=02_false-negative.md) |
 | "Error log analysis" | grep for id, client, uri; check PCRE limits |
 | "Top blocked paths" | Filter for blocked + extract path from Section B |
 | "Payload sizes" | Section C length or jq request_body length |
@@ -266,7 +268,7 @@ tail -500 error.log | grep -E 'ModSecurity|denied|block'
 ## 10. Related
 
 - [analyze_log.py](../scripts/analyze_log.py) — Rule-centric audit log parsing
-- [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Troubleshooting flow
+- [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Troubleshooting flow, CRS issue template steering
 - [false-positives-and-tuning.md](false-positives-and-tuning.md) — Acting on log analysis findings
 - [first-responder-risk-runbook.md](first-responder-risk-runbook.md) — Incident-driven log analysis
 - [ModSecurity Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)) — SecAuditLogFormat, SecAuditLogParts; [Legacy v2 Data Formats](https://github.com/owasp-modsecurity/ModSecurity/wiki/ModSecurity-2-Data-Formats) for Native boundary details

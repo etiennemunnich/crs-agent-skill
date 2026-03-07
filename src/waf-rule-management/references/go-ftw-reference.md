@@ -4,6 +4,7 @@ go-ftw is the primary regression test runner for CRS-style WAF testing.
 Verified against: **go-ftw v2.0.0** (Jan 2026).
 
 - GitHub: <https://github.com/coreruleset/go-ftw>
+- Baseline tools: [baseline-testing-tools.md](baseline-testing-tools.md) — go-test-waf, nuclei
 - Test schema: <https://github.com/coreruleset/ftw-tests-schema>
 
 ## Install
@@ -251,10 +252,6 @@ tests/
 - Do not use deprecated fields (`stop_magic`, `raw_request`) — use `encoded_request` instead.
 - Do not omit `rule_id` — tests will fail to load.
 
-## Related references
+## Related
 
-- ModSecurity + CRS test environment setup → [modsec-crs-testing-reference.md](modsec-crs-testing-reference.md)
-- Coraza cross-engine testing → [coraza-testing-reference.md](coraza-testing-reference.md)
-- CRS Sandbox quick checks → [crs-sandbox-reference.md](crs-sandbox-reference.md)
-- First-responder incident triage → [first-responder-risk-runbook.md](first-responder-risk-runbook.md)
-- CI/CD integration → [developer-security-workflow.md](developer-security-workflow.md)
+[modsec-crs-testing-reference.md](modsec-crs-testing-reference.md) | [coraza-testing-reference.md](coraza-testing-reference.md) | [crs-sandbox-reference.md](crs-sandbox-reference.md)

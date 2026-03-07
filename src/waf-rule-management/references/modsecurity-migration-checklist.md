@@ -34,7 +34,7 @@ Authoritative references:
 Run these gates for every migrated rule pack:
 
 ```bash
-# validate_rule.py will use crslang first, then official legacy rules-check tools when installed
+# validate_rule.py uses crslang (primary) first; legacy modsec-rules-check is fallback
 python scripts/validate_rule.py path/to/rules.conf
 python scripts/lint_crs_rule.py path/to/rules.conf
 python scripts/lint_regex.py path/to/rules.conf -v
@@ -68,7 +68,21 @@ docker compose -f assets/docker/docker-compose.coraza.yaml up -d
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d path/to/tests/
 ```
 
-## 4) Evidence and Sign-off
+## 5) PCRE1 to PCRE2 Migration
+
+As of February 2025, **PCRE2 is the default** for both ModSecurity v2 and v3 ([announcement](https://modsecurity.org/20250217/use-pcre2-as-default-2025-february/)). If you are on older builds with PCRE1:
+
+1. **Check your build**: `modsecurity -v` or inspect compile flags. `--with-pcre2` = PCRE2; `--with-pcre` = PCRE1.
+2. **Upgrade path**: Rebuild with `--with-pcre2` (or use next release where PCRE2 is default).
+3. **Test rules**: Run full regression (`go-ftw`) — most rules work unchanged.
+4. **Edge cases**: PCRE2 is stricter on invalid patterns; Unicode handling may differ. Fix or document.
+5. **ReDoS**: v3 has no runtime PCRE limits; rules must be ReDoS-free. See [regex-steering-guide.md](regex-steering-guide.md).
+
+Legacy v2 users: `SecPcreMatchLimit` / `SecPcreMatchLimitRecursion` remain; PCRE2 builds use `pcre2_set_match_limit()` and `pcre2_set_depth_limit()` internally.
+
+---
+
+## 6) Evidence and Sign-off
 
 Before promoting migrated rules, capture:
 
@@ -97,7 +111,7 @@ Release only when all required gates pass.
 
 ## Related References
 
-- [modsec-directives.md](modsec-directives.md) — Directive reference for v3
+- [modsec-directives.md](modsec-directives.md) — Directive reference for v3 (PCRE2 default)
 - [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Common migration mistakes
 - [coraza-testing-reference.md](coraza-testing-reference.md) — Cross-engine testing
-- [crslang-reference.md](crslang-reference.md) — Using crslang for validation during migration
+- [crslang-reference.md](crslang-reference.md) — Primary validation tool; workflows and expected use cases

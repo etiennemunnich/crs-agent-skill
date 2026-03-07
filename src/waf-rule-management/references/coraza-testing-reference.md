@@ -16,26 +16,13 @@ Purpose:
 
 ## Quick Start
 
-> **Container runtime**: All `docker` commands in this file work with `finch` as a drop-in replacement.
-
-Both engines share port 8080 — run one at a time. Stop one before starting the other.
+Both engines share port 8080 — run one at a time. See [modsec-crs-testing-reference.md](modsec-crs-testing-reference.md) for full quick start; Coraza uses `docker-compose.coraza.yaml` instead of `docker-compose.yaml`. `docker`/`finch` interchangeable.
 
 ```bash
-# ModSecurity + CRS + Albedo (start here for baseline)
-docker compose -f assets/docker/docker-compose.yaml up -d
-go-ftw run --cloud --config assets/docker/.ftw.yaml -d path/to/tests/
-
-# Swap to Coraza + CRS + Albedo for cross-engine check
-docker compose -f assets/docker/docker-compose.yaml down
 docker compose -f assets/docker/docker-compose.coraza.yaml up -d
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d path/to/tests/
-
-# Scripted cross-engine probe+log artifacts (repo-level, from repo root):
-# bash scripts/engine_integration_compare.sh <INCIDENT_ID>
+# Cross-engine: bash scripts/engine_integration_compare.sh <INCIDENT_ID>
 ```
-
-**Note**: go-ftw requires a `.ftw.yaml` config file for the target host/port. See
-`assets/docker/.ftw.yaml` for a ready-to-use config or [go-ftw-reference.md](go-ftw-reference.md) for details.
 
 ## Testing Workflow (Recommended)
 
@@ -169,11 +156,4 @@ See `first-responder-risk-runbook.md` for the full procedure.
 
 ## Related
 
-- [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies (same syntax on Coraza)
-- `go-ftw-reference.md`
-- `crs-sandbox-reference.md`
-- `log-analysis-steering.md`
-- `antipatterns-and-troubleshooting.md`
-- `first-responder-risk-runbook.md`
-- ModSecurity v3 reference manual:
-  <https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)>
+[modsec-crs-testing-reference.md](modsec-crs-testing-reference.md) | [go-ftw-reference.md](go-ftw-reference.md) | [first-responder-risk-runbook.md](first-responder-risk-runbook.md)

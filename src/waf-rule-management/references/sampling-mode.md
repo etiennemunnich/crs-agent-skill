@@ -132,11 +132,6 @@ Always have a documented rollback procedure before advancing to the next stage.
 
 ---
 
-## Related References
+## Related
 
-- [paranoia-levels.md](paranoia-levels.md) — PL rollout strategy
-- [anomaly-scoring.md](anomaly-scoring.md) — Threshold tuning
-- [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies
-- [best-practices-modsec-coraza-crs.md](best-practices-modsec-coraza-crs.md) — Operations checklist
-- [log-analysis-steering.md](log-analysis-steering.md) — Monitoring commands
-- CRS Docs – Anomaly Scoring: https://coreruleset.org/docs/2-how-crs-works/2-1-anomaly_scoring/
+[paranoia-levels.md](paranoia-levels.md) | [anomaly-scoring.md](anomaly-scoring.md) | [false-positives-and-tuning.md](false-positives-and-tuning.md)

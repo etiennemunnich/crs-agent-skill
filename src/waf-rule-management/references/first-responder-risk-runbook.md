@@ -300,7 +300,7 @@ Conventions (see full template in [Step 1](#1-research-the-risk-and-scaffold-wor
 
 ```bash
 # Validate syntax
-python scripts/validate_rule.py incidents/<INCIDENT_ID>/rules.conf
+python scripts/validate_rule.py incidents/<INCIDENT_ID>/rules.conf   # crslang primary
 
 # Lint regex patterns for ReDoS/performance
 python scripts/lint_regex.py incidents/<INCIDENT_ID>/rules.conf -v

@@ -1,3 +1,7 @@
 # Python dependencies for WAF rule management scripts.
 # Install: python3 -m pip install -r requirements.txt
+# Or: bash scripts/install_tools.sh
+#
+# PyYAML >=6.0 — CVE-2020-1747, CVE-2020-14343 affect <6.0 (unsafe deserialization).
+# Scripts use yaml.safe_load() for untrusted input.
 pyyaml>=6.0

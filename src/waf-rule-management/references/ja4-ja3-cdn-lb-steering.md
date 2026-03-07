@@ -127,7 +127,7 @@ Use this to scope JA4 rules (e.g. only enforce allowlist on `/api/*` where metho
 3. **Choose evaluation strategy** — Allowlist for API; blocklist or anomaly for website; mixed for hybrid
 4. **Select operator** — `@pmFromFile` for lists; `@rx` for patterns; `@streq` for single value
 5. **Validate format** — JA4: 36 chars (`t13d1516h2_8daaf6152771_02713d6af862`); JA3: 32 hex chars
-6. **Test** — Use `validate_rule.py`, then go-ftw or curl with known fingerprints
+6. **Test** — Use `validate_rule.py` (crslang primary), then go-ftw or curl with known fingerprints
 
 ### Rule Creation Workflow (OODA)
 
@@ -249,7 +249,7 @@ Tool capability boundaries:
 
 Recommended flow:
 
-1. **Validate syntax**: `python scripts/validate_rule.py ja4-rules.conf`
+1. **Validate syntax**: `python scripts/validate_rule.py ja4-rules.conf` (crslang primary)
 2. **Replay matching logic** with `go-ftw` using explicit JA4 header values
 3. **Validate real generation path** end-to-end through CDN/LB using real HTTPS traffic
 4. **Verify header reachability at origin**: `curl -H "CloudFront-Viewer-JA4-Fingerprint: t13d1516h2_8daaf6152771_02713d6af862" http://localhost:8080/`

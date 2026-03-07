@@ -20,7 +20,7 @@ Recommended practices for deploying, configuring, and operating ModSecurity, Cor
 |-----------|--------------|-------|
 | `SecRequestBodyLimit` | 13107200 (12.5 MB) | Adjust for max file upload size |
 | `SecRequestBodyNoFilesLimit` | 131072 (128 KB) | Keep low for non-file args |
-| `SecRequestBodyLimitAction` | Reject | Use ProcessPartial only in DetectionOnly |
+| `SecRequestBodyLimitAction` | Reject | Use ProcessPartial only in DetectionOnly — data beyond limit is not inspected (evasion risk). See [modsec-directives.md](modsec-directives.md) and [ModSecurity blog](https://modsecurity.org/20260222/how-big-is-too-big-a-deep-dive-into-modsecurity-request-body-limits/). |
 | `SecRequestBodyJsonDepthLimit` | 512 | Lower if possible |
 | `SecArgumentsLimit` | 1000 | Match rule 200007 |
 | `SecResponseBodyMimeType` | text/plain text/html text/xml | Avoid buffering images/archives |
@@ -31,7 +31,7 @@ Recommended practices for deploying, configuring, and operating ModSecurity, Cor
 
 - **XML/JSON parsers**: Enable via `ctl:requestBodyProcessor=XML` or `JSON` for appropriate Content-Types.
 - **Multipart**: Keep strict multipart validation; do not remove rule 200003/200004. Use permissive mode only if PEM/header-like content is required.
-- **PCRE limits**: Set `SecPcreMatchLimit` and `SecPcreMatchLimitRecursion` (e.g. 1000) to mitigate ReDoS.
+- **PCRE limits**: ModSecurity v3 (PCRE2) uses compile-time limits; no runtime config. v2 only: set `SecPcreMatchLimit` and `SecPcreMatchLimitRecursion` (e.g. 1000). Rules must be ReDoS-free — see [regex-steering-guide.md](regex-steering-guide.md).
 
 ### Audit and Logging
 
@@ -133,6 +133,10 @@ For discovery-first assessments, add:
 - `go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest`
 - `cdncheck -i app.example.com -jsonl`
 
+### Upgrade
+
+For CRS upgrade workflow, tools (go-ftw, Sandbox, msc_retest, renovatebot), and gotchas: [upgrade-and-testing.md](upgrade-and-testing.md).
+
 ### Sources
 
 - [CRS False Positives and Tuning](https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/) — Rule exclusions, placement, examples
@@ -160,7 +164,7 @@ For discovery-first assessments, add:
 
 ### Testing
 
-- Validate syntax: `python scripts/validate_rule.py rule.conf`
+- Validate syntax: `python scripts/validate_rule.py rule.conf` (crslang primary; see [crslang-reference.md](crslang-reference.md))
 - Lint CRS style: `python scripts/lint_crs_rule.py rule.conf`
 - **Regex rules**: Lint for ReDoS/performance: `python scripts/lint_regex.py rule.conf -v` — see [regex-steering-guide.md](regex-steering-guide.md)
 - Test with go-ftw before deployment.
@@ -198,11 +202,6 @@ For discovery-first assessments, add:
 
 ---
 
-## Related References
+## Related
 
-- [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies and decision tree
-- [paranoia-levels.md](paranoia-levels.md) — PL rollout strategy
-- [sampling-mode.md](sampling-mode.md) — Gradual rollout patterns
-- [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) — Common configuration mistakes
-- [developer-security-workflow.md](developer-security-workflow.md) — CI/CD integration
-- [modsec-directives.md](modsec-directives.md) — Directive reference
+[false-positives-and-tuning.md](false-positives-and-tuning.md) | [paranoia-levels.md](paranoia-levels.md) | [antipatterns-and-troubleshooting.md](antipatterns-and-troubleshooting.md) | [modsec-directives.md](modsec-directives.md)
