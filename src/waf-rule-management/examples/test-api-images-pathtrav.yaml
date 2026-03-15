@@ -1,0 +1,249 @@
+meta:
+  author: "security-team"
+  enabled: true
+  name: "test-api-images-pathtrav.yaml"
+  description: "Tests for rules 100100-100104 - Path traversal detection on /api/images/ endpoint"
+rule_ids:
+  - 100100
+  - 100101
+  - 100102
+  - 100103
+  - 100104
+
+tests:
+  # ATTACK CASES - should return 403
+
+  - test_title: "100100-1-unencoded-path-traversal-etc-passwd"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/../../etc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100100-2-unencoded-path-traversal-config-yml"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/../../config.yml"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100100-3-unencoded-path-traversal-multiple-levels"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/../../../../../../../etc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100100-4-unencoded-path-traversal-backslash"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/..\\..\\etc\\passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100101-1-single-encoded-path-traversal-2e2e2f"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/%2e%2e%2fetc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100101-2-single-encoded-path-traversal-multiple-sequences"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100101-3-single-encoded-config-file-access"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/../../%2e%2e%2fconfig.yml"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100102-1-single-encoded-backslash-traversal"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/%2e%2e%5cetc%5cpasswd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100103-1-double-encoded-path-traversal-252e252e252f"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/%252e%252e%252fetc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100103-2-double-encoded-multiple-sequences"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/%252e%252e%252f%252e%252e%252fetc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100104-1-double-encoded-backslash-traversal"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/%252e%252e%255cetc%255cpasswd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  - test_title: "100100-5-path-traversal-post-request"
+    stages:
+      - input:
+          method: "POST"
+          uri: "/api/images/../../etc/passwd"
+          headers:
+            Host: "localhost"
+            Content-Type: "application/json"
+          data: '{"test":"payload"}'
+        output:
+          status: 403
+
+  - test_title: "100100-6-path-traversal-head-request"
+    stages:
+      - input:
+          method: "HEAD"
+          uri: "/api/images/../../etc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 403
+
+  # BENIGN CASES - should return 200
+
+  - test_title: "100100-benign-1-legitimate-image-request-jpg"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/product-123.jpg"
+          headers:
+            Host: "localhost"
+            Accept: "image/jpeg"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-2-legitimate-image-request-png"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/abc-def_456.png"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-3-legitimate-image-with-params"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/product-456.jpg?width=800&height=600"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-4-legitimate-image-with-subdirectory"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/products/product-789.jpg"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-5-legitimate-uuid-format"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/550e8400-e29b-41d4-a716-446655440000.jpg"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-6-legitimate-hash-format"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/5d41402abc4b2a76b9719d911017c592.jpg"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-7-legitimate-complex-filename"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/product_variant_color_size_2024-03-13.jpg"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-8-dot-in-filename-not-traversal"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/images/image.backup.jpg"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-9-different-api-endpoint"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/products/../../etc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200
+
+  - test_title: "100100-benign-10-similar-path-different-context"
+    stages:
+      - input:
+          method: "GET"
+          uri: "/api/files/../../etc/passwd"
+          headers:
+            Host: "localhost"
+        output:
+          status: 200

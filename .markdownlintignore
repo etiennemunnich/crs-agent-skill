@@ -1,4 +1,6 @@
 research/
+**/incidents/
+**/examples/
 node_modules/
 .git/
 .cursor/

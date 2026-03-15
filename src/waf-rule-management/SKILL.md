@@ -19,7 +19,7 @@ compatibility: >
   Run scripts/install_tools.sh. Scripts must support --help.
 metadata:
   author: owasp-crs-tooling
-  version: "0.8"
+  version: "0.9"
 ---
 
 # WAF Rule Management
@@ -75,6 +75,8 @@ python scripts/openapi_to_rules.py spec.yaml -o r.conf  # OpenAPI → rules
 python scripts/validate_exclusion.py --input exclusion.conf --output text  # Exclusion safety checks
 python scripts/detect_app_profile.py audit.log --output text  # App profile hints
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/  # Regression tests
+bash scripts/new_incident.sh INC-001 "brief title"   # Create incident workspace
+bash scripts/assemble_rules.sh rules/                # Assemble rule set from directory
 
 # Optional ingress discovery (CDN/cloud/WAF front door)
 go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
@@ -102,6 +104,8 @@ curl -H "x-format-output: txt-matched-rules" \
 | Rule validation / Seclang syntax | [crslang-reference.md](references/crslang-reference.md) — crslang is primary; validate_rule.py uses it first |
 | OpenAPI → WAF allowlist | [openapi-to-waf.md](references/openapi-to-waf.md) |
 | Log analysis / triage | [log-analysis-steering.md](references/log-analysis-steering.md) |
+| Anomaly scoring / threshold tuning | [anomaly-scoring.md](references/anomaly-scoring.md) — includes M2M/API scoring models |
+| Sampling / DetectionOnly rollout | [sampling-mode.md](references/sampling-mode.md) |
 | Regression testing | [go-ftw-reference.md](references/go-ftw-reference.md) |
 | ModSecurity + CRS test env | [modsec-crs-testing-reference.md](references/modsec-crs-testing-reference.md) |
 | Coraza + CRS / cross-engine | [coraza-testing-reference.md](references/coraza-testing-reference.md) |
@@ -111,6 +115,8 @@ curl -H "x-format-output: txt-matched-rules" \
 | Deployment / rollout | [best-practices-modsec-coraza-crs.md](references/best-practices-modsec-coraza-crs.md) |
 | Regex / ReDoS / crs-toolchain | [regex-steering-guide.md](references/regex-steering-guide.md) |
 | v2→v3 migration | [modsecurity-migration-checklist.md](references/modsecurity-migration-checklist.md) |
+| OODA loop / workflow methodology | [ooda-loop-guide.md](references/ooda-loop-guide.md) |
+| Developer security lifecycle / CI | [developer-security-workflow.md](references/developer-security-workflow.md) |
 
 ---
 
@@ -192,6 +198,8 @@ Reference installs:
 | [antipatterns-and-troubleshooting.md](references/antipatterns-and-troubleshooting.md) | Broken config, bad exclusion, rule not working, CRS reporting |
 | [false-positives-and-tuning.md](references/false-positives-and-tuning.md) | FP handling, exclusion decision tree, safe patterns |
 | [crs-tune-rule-steering.md](references/crs-tune-rule-steering.md) | CRS groups, phases, request/response, version-aware tuning |
+| [anomaly-scoring.md](references/anomaly-scoring.md) | Anomaly threshold tuning, M2M/API scoring models, inbound/outbound |
+| [sampling-mode.md](references/sampling-mode.md) | DetectionOnly / sampling rollout strategy |
 | [log-analysis-steering.md](references/log-analysis-steering.md) | Audit/error log analysis, top talkers |
 | [go-ftw-reference.md](references/go-ftw-reference.md) | Regression tests, test format, cloud mode |
 | [modsec-crs-testing-reference.md](references/modsec-crs-testing-reference.md) | ModSecurity + CRS local test env |
@@ -205,6 +213,8 @@ Reference installs:
 | [regex-steering-guide.md](references/regex-steering-guide.md) | Effective + performant rules, ReDoS, operator choice, transforms |
 | [openapi-to-waf.md](references/openapi-to-waf.md) | OpenAPI → positive-security rules |
 | [first-responder-risk-runbook.md](references/first-responder-risk-runbook.md) | Incident triage, virtual patches |
+| [ooda-loop-guide.md](references/ooda-loop-guide.md) | OODA loop methodology mapped to WAF workflows |
+| [developer-security-workflow.md](references/developer-security-workflow.md) | Branch-per-change strategy, developer-friendly CI lifecycle |
 | [crs-contribution-workflow.md](references/crs-contribution-workflow.md) | CRS PR, go-ftw, nuclei |
 | [best-practices-modsec-coraza-crs.md](references/best-practices-modsec-coraza-crs.md) | Deployment, rollout |
 | [modsec-directives.md](references/modsec-directives.md) | Engine directives |

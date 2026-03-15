@@ -21,6 +21,8 @@ jobs:
           globs: |
             **/*.md
             !research/**
+            !**/incidents/**
+            !**/examples/**
 
   yaml-lint:
     name: YAML Lint
@@ -65,9 +67,12 @@ jobs:
           python -m py_compile src/waf-rule-management/scripts/lint_regex.py
           python -m py_compile src/waf-rule-management/scripts/lint_crs_rule.py
           python -m py_compile src/waf-rule-management/scripts/analyze_log.py
+          python -m py_compile src/waf-rule-management/scripts/audit_log_parser.py
           python -m py_compile src/waf-rule-management/scripts/openapi_to_rules.py
           python -m py_compile src/waf-rule-management/scripts/generate_ftw_test.py
           python -m py_compile src/waf-rule-management/scripts/generate_exclusion.py
+          python -m py_compile src/waf-rule-management/scripts/validate_exclusion.py
+          python -m py_compile src/waf-rule-management/scripts/detect_app_profile.py
 
       - name: Check script --help flags
         run: |

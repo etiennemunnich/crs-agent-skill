@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.egg-info/
+.pytest_cache/
 .venv/
 venv/
 .env
@@ -13,6 +14,14 @@ iteration-*-eval-viewer.html
 iteration-*-benchmark.json
 crs-skill-assessment-report.md
 eval-viewer.html
+
+# Agent-generated eval run artifacts
+src/waf-rule-management/ASSERTIONS.json
+src/waf-rule-management/EXECUTION_SUMMARY.txt
+src/waf-rule-management/REPORT.md
+
+# Skill archive (redundant with repo)
+src/waf-rule-management.zip
 
 # Incident workspace outputs (generated at runtime)
 src/waf-rule-management/incidents/*/

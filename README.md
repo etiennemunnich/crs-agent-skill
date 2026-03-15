@@ -4,7 +4,7 @@
 [![CI](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml)
 [![Links](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml)
 [![Skill Validate](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml)
-[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.8-8A2BE2)](https://agentskills.io)
+[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.9-8A2BE2)](https://agentskills.io)
 
 Agent skill for writing, validating, testing, and tuning **ModSecurity v3**, **Coraza**, and **OWASP Core Rule Set (CRS)** WAF rules using AI coding assistants.
 
@@ -154,6 +154,10 @@ src/waf-rule-management/
 │   ├── detect_app_profile.py   # App profile detector
 │   ├── new_incident.sh         # Incident workspace scaffolder
 │   └── assemble_rules.sh       # Multi-incident rule assembly
+├── examples/                   # Demo rule and test outputs
+│   ├── README.md               # Descriptions and usage
+│   ├── rules-*.conf            # OpenAPI→WAF, exclusions, custom rules
+│   └── *-tests.yaml            # go-ftw test examples
 ├── references/                 # 32 on-demand reference docs
 │   ├── actions-reference.md
 │   ├── anomaly-scoring.md

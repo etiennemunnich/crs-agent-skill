@@ -1,0 +1,211 @@
+---
+# go-ftw test suite for payment-api.yaml rules
+# Tests payment API positive security allowlist
+# Validates path restrictions, Content-Type, and Authorization requirements
+
+meta:
+  description: "Payment API allowlist tests - positive security model"
+  author: "WAF Rule Management"
+  version: "1.0.0"
+  type: "test"
+
+tests:
+  - test_id: "payment-api-001"
+    desc: "Test 1: POST /api/payments with valid Content-Type and Authorization should pass (200)"
+    rule_id: 901000
+    rule_description: "Path allowlist enforcement"
+    stages:
+      - input:
+          method: POST
+          uri: "/api/payments"
+          headers:
+            - name: "Content-Type"
+              value: "application/json"
+            - name: "Authorization"
+              value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+          data: '{"amount": 100.00, "currency": "USD", "recipient_id": "550e8400-e29b-41d4-a716-446655440000"}'
+        output:
+          status: 201
+          log_contains:
+            - rule_id: "901020"
+        expected:
+          status: 201
+
+  - test_id: "payment-api-002"
+    desc: "Test 2: POST /api/payments without Content-Type header should be blocked (400)"
+    rule_id: 901010
+    rule_description: "Content-Type validation"
+    stages:
+      - input:
+          method: POST
+          uri: "/api/payments"
+          headers:
+            - name: "Authorization"
+              value: "Bearer token123"
+          data: '{"amount": 50.00}'
+        output:
+          status: 400
+          log_contains:
+            - rule_id: "901010"
+        expected:
+          status: 400
+
+  - test_id: "payment-api-003"
+    desc: "Test 3: POST /api/payments with wrong Content-Type should be blocked (400)"
+    rule_id: 901010
+    rule_description: "Content-Type validation"
+    stages:
+      - input:
+          method: POST
+          uri: "/api/payments"
+          headers:
+            - name: "Content-Type"
+              value: "application/x-www-form-urlencoded"
+            - name: "Authorization"
+              value: "Bearer token123"
+          data: 'amount=100&currency=USD'
+        output:
+          status: 400
+          log_contains:
+            - rule_id: "901010"
+        expected:
+          status: 400
+
+  - test_id: "payment-api-004"
+    desc: "Test 4: POST /api/payments without Authorization should be blocked (401)"
+    rule_id: 901020
+    rule_description: "Authorization requirement"
+    stages:
+      - input:
+          method: POST
+          uri: "/api/payments"
+          headers:
+            - name: "Content-Type"
+              value: "application/json"
+          data: '{"amount": 100.00, "currency": "USD", "recipient_id": "550e8400-e29b-41d4-a716-446655440000"}'
+        output:
+          status: 401
+          log_contains:
+            - rule_id: "901020"
+        expected:
+          status: 401
+
+  - test_id: "payment-api-005"
+    desc: "Test 5: GET /api/payments/123 with Authorization should pass (200)"
+    rule_id: 901030
+    rule_description: "GET payment by ID with auth"
+    stages:
+      - input:
+          method: GET
+          uri: "/api/payments/123"
+          headers:
+            - name: "Authorization"
+              value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        output:
+          status: 200
+        expected:
+          status: 200
+
+  - test_id: "payment-api-006"
+    desc: "Test 6: GET /api/payments/123 without Authorization should be blocked (401)"
+    rule_id: 901030
+    rule_description: "Authorization requirement for GET"
+    stages:
+      - input:
+          method: GET
+          uri: "/api/payments/123"
+        output:
+          status: 401
+          log_contains:
+            - rule_id: "901030"
+        expected:
+          status: 401
+
+  - test_id: "payment-api-007"
+    desc: "Test 7: DELETE /api/payments/456 with Authorization should pass (204)"
+    rule_id: 901040
+    rule_description: "DELETE payment with auth"
+    stages:
+      - input:
+          method: DELETE
+          uri: "/api/payments/456"
+          headers:
+            - name: "Authorization"
+              value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        output:
+          status: 204
+        expected:
+          status: 204
+
+  - test_id: "payment-api-008"
+    desc: "Test 8: DELETE /api/payments/456 without Authorization should be blocked (401)"
+    rule_id: 901040
+    rule_description: "Authorization requirement for DELETE"
+    stages:
+      - input:
+          method: DELETE
+          uri: "/api/payments/456"
+        output:
+          status: 401
+          log_contains:
+            - rule_id: "901040"
+        expected:
+          status: 401
+
+  - test_id: "payment-api-009"
+    desc: "Test 9: GET /api/admin/config should be blocked (403) - path not in allowlist"
+    rule_id: 901000
+    rule_description: "Path allowlist enforcement"
+    stages:
+      - input:
+          method: GET
+          uri: "/api/admin/config"
+          headers:
+            - name: "Authorization"
+              value: "Bearer token123"
+        output:
+          status: 403
+          log_contains:
+            - rule_id: "901000"
+        expected:
+          status: 403
+
+  - test_id: "payment-api-010"
+    desc: "Test 10: POST /api/users should be blocked (403) - path not in allowlist"
+    rule_id: 901000
+    rule_description: "Path allowlist enforcement"
+    stages:
+      - input:
+          method: POST
+          uri: "/api/users"
+          headers:
+            - name: "Content-Type"
+              value: "application/json"
+            - name: "Authorization"
+              value: "Bearer token123"
+          data: '{"username": "test"}'
+        output:
+          status: 403
+          log_contains:
+            - rule_id: "901000"
+        expected:
+          status: 403
+
+  - test_id: "payment-api-011"
+    desc: "Test 11: GET /api/payments (collection endpoint, not in spec) should be blocked (403)"
+    rule_id: 901000
+    rule_description: "Path allowlist - no GET on /api/payments collection"
+    stages:
+      - input:
+          method: GET
+          uri: "/api/payments"
+          headers:
+            - name: "Authorization"
+              value: "Bearer token123"
+        output:
+          status: 403
+          log_contains:
+            - rule_id: "901000"
+        expected:
+          status: 403
+

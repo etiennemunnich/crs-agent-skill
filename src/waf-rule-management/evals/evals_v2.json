@@ -1,0 +1,447 @@
+{
+  "version": "2.1",
+  "skill_name": "waf-rule-management",
+  "design_principles": {
+    "prompt_style": "All prompts are IMPLICIT — describe the WAF problem, never name scripts or tools. The skill's routing table and Essential Commands must guide the agent to the right tools. This is the A/B signal.",
+    "grading": {
+      "code_first": "String match, regex, file existence — fastest, most reliable. Used for tool discovery and output structure checks.",
+      "llm_second": "claude-haiku grades quality judgments with strict rubrics and <thinking> reasoning. Separate model from the evaluated one.",
+      "waf_rigor": "Assertions grounded in real GitHub issues from CRS (#4543, #4437, #4478, #4401, #4363), ModSecurity (#3509, #3505, #3415, #3436), and Coraza (#1503, #1491, #1447, #1370, #1499). Each eval maps to the issue categories that actually affect users."
+    },
+    "issue_categories_covered": {
+      "FP_false_positive": "Evals 1, 4, 5 — CRS #4437, #4359",
+      "FN_bypass_evasion": "Evals 7, 8 — CRS #4543, #4425, #4424, #4423, #4390, #4363",
+      "rule_logic_phase_variables": "Evals 2, 3, 6 — CRS #4478, #4401, ModSec #3415",
+      "regex_safety_pcre": "Evals 3, 8 — CRS #4480, ModSec #3436, Coraza #1447",
+      "compatibility_modsec_coraza": "Evals 5, 9 — ModSec #3505, #3449, Coraza #1503, #1370",
+      "config_deployment_logging": "Evals 1, 6 — ModSec #3472, Coraza #1550, #1413"
+    },
+    "ooda_loop": "run_evals.py --diagnose analyses failures → maps them to SKILL.md routing gaps → suggests fixes → re-run."
+  },
+  "evals": [
+    {
+      "id": 1,
+      "tier": "easy",
+      "name": "paranoia-level-recommendation",
+      "issue_sources": "CRS #4437 (FP from geographic names at PL2), CRS #4359 (FP on common phrases), Coraza #1413 (audit log breakage)",
+      "prompt": "We're setting up OWASP CRS v4 for the first time. It's a pure API SaaS — machine-to-machine JSON REST only, 60 enterprise customers, 99.99% SLA. What paranoia level should we start at, how do we grow from there, and what logging setup should we have in place before we turn on blocking?",
+      "measures": "Skill routing: anomaly-scoring.md, sampling-mode.md. Config/deployment awareness: logging setup before blocking.",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[FP reasoning] Recommends PL1 or PL2 (not PL3/PL4) with FP rationale for API-only traffic",
+          "grading_method": "llm",
+          "rubric": "The response recommends PL1 or PL2 as the starting paranoia level, NOT PL3 or PL4, AND explains why higher PLs cause excessive false positives for API-only M2M traffic (ref: CRS issues show FPs on common phrases even at PL1/PL2). Score 'correct' if PL1 or PL2 recommended with FP reasoning. Score 'incorrect' if PL3/PL4 recommended without qualification."
+        },
+        {
+          "id": "A2",
+          "description": "[Config] Anomaly scoring and threshold tuning discussed for M2M traffic",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["anomaly", "threshold", "scoring"],
+          "min_matches": 2
+        },
+        {
+          "id": "A3",
+          "description": "[Config] Detection-only or sampling mode recommended before blocking",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["detection", "DetectionOnly", "sampling", "detection-only", "log-only", "monitoring mode"],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Config/deployment] Audit logging setup mentioned — SecAuditLog, log format, or log analysis tooling",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["SecAuditLog", "audit log", "audit_log", "SecAuditLogParts", "logging", "log analysis", "analyze_log"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[FP reasoning] Phased upgrade path provided (PL1→tune FPs→PL2)",
+          "grading_method": "llm",
+          "rubric": "Does the response provide a phased upgrade path from lower to higher paranoia levels with criteria for each step (e.g. 'start PL1, tune FPs for 2 weeks, then PL2')? This is critical because real CRS deployments (per #4437, #4359) show that jumping PLs without tuning causes FP storms. Score 'correct' if phases given. Score 'incorrect' if single recommendation with no upgrade plan."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "tier": "easy",
+      "name": "block-bad-cidr",
+      "issue_sources": "CRS #4478 (rules in wrong phase), CRS #4401 (missing REQUEST_HEADERS targets), ModSec #3415 (phase ordering)",
+      "prompt": "We're under a brute-force attack on our login endpoint — all traffic is coming from 185.220.101.0/24, a known Tor exit node range. We need to block only POST /auth/login from that range with 403. Nothing else should be affected. The rule needs to fire as early as possible — we don't want the request body to even be parsed. Write it and make sure it's correct.",
+      "measures": "Tool discovery: validate_rule.py. Rule logic: correct operator, endpoint scoping, phase selection (phase:1 for early deny — ref CRS #4478).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[ModSec logic] Uses @ipMatch or @ipMatchFromFile (not @rx for IP matching)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["@ipMatch", "@ipMatchFromFile"],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Rule logic — phase] Rule uses phase:1 for early deny before body parsing (ref CRS #4478)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["phase:1", "phase 1"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Rule logic — scoping] Rule scoped to POST /auth/login — not a global IP block",
+          "grading_method": "llm",
+          "rubric": "The rule MUST check BOTH POST method AND /auth/login URI (via chain or conditions on REQUEST_METHOD + REQUEST_URI). Score 'correct' if both conditions checked. Score 'incorrect' if the rule blocks all traffic from the CIDR globally — this is a scoping error (ref: CRS #4401 documents how insufficient variable targeting causes broad collateral impact)."
+        },
+        {
+          "id": "A4",
+          "description": "[Tool discovery] validate_rule.py invoked for syntax check",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["validate_rule", "validate_rule.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[ModSec logic] deny + status:403 + logging action present, rule ID in 100000-199999",
+          "grading_method": "code",
+          "check": "string_match_all",
+          "patterns": ["deny", "status:403", "log"]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "tier": "medium",
+      "name": "path-traversal-custom-rule",
+      "issue_sources": "CRS #4543 (regex blind spot in glob detection), CRS #4480 (regex-assembly migration), ModSec #3436 (PCRE stack overflow), Coraza #1447 (case-insensitive regex failure)",
+      "prompt": "ModSecurity v3 + CRS v4 PL1. We're seeing path traversal attacks on GET /api/images/ — both /api/images/../../etc/passwd and URL-encoded variants like %2e%2e%2f. We also found a glob-character bypass similar to /api/images/v2/../../../etc/?asswd (using ? as a glob wildcard to evade literal 'passwd' matching). Write a custom rule that catches all of these, make sure the regex is safe, and give me a way to regression-test it.",
+      "measures": "Tool discovery: validate_rule.py, lint_regex.py, generate_ftw_test.py. Regex rigor: covers encoding + glob evasion (ref CRS #4543), no ReDoS (ref ModSec #3436).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Evasion] Rule detects BOTH unencoded ../ AND URL-encoded %2e%2e%2f variants",
+          "grading_method": "llm",
+          "rubric": "The rule MUST handle both literal path traversal (../) AND URL-encoded variants (%2e%2e%2f). This requires t:urlDecodeUni transform or separate patterns. Ref CRS #4543: regex blind spots on path-component-initial characters are a real bypass vector. Score 'correct' if both forms addressed. Score 'incorrect' if only literal ../ matched."
+        },
+        {
+          "id": "A2",
+          "description": "[Regex safety] lint_regex.py invoked or ReDoS risk explicitly addressed (ref ModSec #3436 PCRE overflow)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["lint_regex", "lint_regex.py", "ReDoS", "catastrophic backtrack", "PCRE", "pcre_limit"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Tool discovery] validate_rule.py invoked",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["validate_rule", "validate_rule.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Tool discovery] generate_ftw_test.py invoked or go-ftw test YAML produced",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["generate_ftw_test", "generate_ftw_test.py", "go-ftw", "ftw"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Evasion] Glob-character evasion (?asswd) addressed or acknowledged as a vector (ref CRS #4543)",
+          "grading_method": "llm",
+          "rubric": "The prompt mentions a glob-character bypass (?asswd). Does the response address this? It should either: (a) write a rule pattern that catches glob wildcards like ? in sensitive paths, (b) explain why this evasion works and how to mitigate it, or (c) note that CRS 932200 has a known blind spot here. Score 'correct' if the glob evasion is addressed in any of these ways. Score 'incorrect' if completely ignored."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "tier": "medium",
+      "name": "fp-search-scope-out",
+      "issue_sources": "CRS #4437 (FP on '& Mount' geographic names), CRS #4359 (FP on 'file size is'), ModSec #3505 / Coraza #1503 (wildcard ctl:ruleRemoveTargetById)",
+      "prompt": "ModSecurity v3 + CRS v4 PL2. Rule 941130 fires false positives on our search endpoint — users searching for 'select dropdown', 'table reservation', 'frame design' on GET /api/search in the ARGS:q parameter. These are legitimate searches, like how CRS fires on '& Mount Davis' in geographic contexts. We can't disable the rule globally or drop the paranoia level. How do we fix this properly?",
+      "measures": "Tool discovery: generate_exclusion.py. FP rigor: runtime vs configure-time, parameter-level scoping, not global disable. Awareness of ctl: limitations (ref ModSec #3505).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Tool discovery] generate_exclusion.py invoked",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["generate_exclusion", "generate_exclusion.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[FP rigor] Exclusion scoped to ARGS:q — not a blanket rule removal",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["ARGS:q", "ctl:ruleRemoveTargetById", "ruleRemoveTargetById"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[FP rigor] Runtime ctl: approach, placed BEFORE CRS include",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["ctl:", "runtime", "before the CRS", "before.*include"],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[FP rigor] Exclusion scoped to /api/search URI — not global",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["/api/search", "REQUEST_URI"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[FP reasoning] Explains why ARGS:q scoping preserves XSS detection on other variables",
+          "grading_method": "llm",
+          "rubric": "Does the response explain WHY scoping the exclusion to ARGS:q is safer than globally disabling 941130? It MUST mention that other request variables (REQUEST_BODY, REQUEST_HEADERS, other ARGS) remain protected. Real-world FP reports (CRS #4437, #4359) show that narrow scoping is essential because the same rules catch real attacks on other parameters. Score 'correct' if scope-safety reasoning present. Score 'incorrect' if no explanation."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "tier": "medium",
+      "name": "graphql-fp-exclusion-with-compatibility",
+      "issue_sources": "ModSec #3505 / Coraza #1503 (ctl:ruleRemoveTargetById lacks regex), Coraza #1370 (missing SecRuleUpdateActionByTag), ModSec #3449 (setenv gap in nginx connector)",
+      "prompt": "CRS v4 PL2 is blocking our GraphQL API at POST /api/graphql with rule 942100 (SQLi). The payloads are legitimate mutations with notes like 'OR 1=1'. We run ModSecurity v3 on some hosts and Coraza on others (Kubernetes). How do we suppress this FP in a way that works on BOTH engines? We heard that some ctl: features behave differently between the two.",
+      "measures": "Tool discovery: generate_exclusion.py, validate_rule.py. Compatibility awareness: ModSec vs Coraza ctl: behavior differences (ref #3505, #1503, #1370).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Tool discovery] generate_exclusion.py invoked with 942100 and /api/graphql",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["generate_exclusion", "942100", "/api/graphql"],
+          "min_matches": 2
+        },
+        {
+          "id": "A2",
+          "description": "[Compatibility] ModSec vs Coraza ctl: differences acknowledged or addressed",
+          "grading_method": "llm",
+          "rubric": "The prompt explicitly asks about running on BOTH ModSecurity and Coraza. Does the response acknowledge any compatibility differences? Known issues: ctl:ruleRemoveTargetById lacks regex/wildcard support in both engines (ModSec #3505, Coraza #1503), SecRuleUpdateActionByTag not implemented in Coraza (#1370), setenv doesn't work in nginx connector (ModSec #3449). Score 'correct' if ANY compatibility consideration between the engines is mentioned. Score 'incorrect' if the response assumes identical behavior without qualification."
+        },
+        {
+          "id": "A3",
+          "description": "[ModSec logic] Exclusion rule ID in 100000-199999 range",
+          "grading_method": "code",
+          "check": "regex_match",
+          "pattern": "id:(1[0-9]{5})"
+        },
+        {
+          "id": "A4",
+          "description": "[Tool discovery] validate_rule.py invoked",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["validate_rule", "validate_rule.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[FP rigor] Warns against global rule disable or PL drop",
+          "grading_method": "llm",
+          "rubric": "Does the response warn against disabling 942100 globally or dropping paranoia level? Score 'correct' if warning present. Score 'incorrect' if global disable recommended without qualification."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "tier": "medium",
+      "name": "log-triage-workflow",
+      "issue_sources": "ModSec #3472 (inconsistent error log format), Coraza #1413 (broken native audit log), ModSec #3415 (PCRE limits rule ordering), CRS #4401 (REQUEST_HEADERS blind spot)",
+      "prompt": "Our WAF fired 1,247 times on rule 942100, 389 times on 941170, and 23 times on 949110 this week. We're a B2B SaaS, 40 enterprise customers, PL1, anomaly threshold 5. We're also seeing 'PCRE limits exceeded' warnings in the error log for some of these — does that affect what was actually blocked? Where do I start, and what's the workflow?",
+      "measures": "Tool discovery: analyze_log.py, generate_exclusion.py, CRS Sandbox. Triage logic: 949110 priority. Knowledge: PCRE limits impact (ref ModSec #3415, #3436).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Triage logic] 949110 identified as highest priority — it's the blocking rule",
+          "grading_method": "llm",
+          "rubric": "949110 is the CRS anomaly-scoring blocking rule — every fire means a customer request was DENIED. It MUST be investigated first despite lowest volume. Score 'correct' if 949110 flagged as top priority. Score 'incorrect' if 942100 treated as most urgent due to volume."
+        },
+        {
+          "id": "A2",
+          "description": "[Tool discovery] analyze_log.py referenced for per-rule drill-down",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["analyze_log", "analyze_log.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Rule logic] PCRE limits exceeded explained — what it means for detection completeness (ref ModSec #3415)",
+          "grading_method": "llm",
+          "rubric": "The prompt mentions 'PCRE limits exceeded' warnings. Does the response explain the impact? When PCRE limits are hit, the regex engine stops matching early, meaning the rule MAY NOT HAVE DETECTED the attack — this is a potential false negative, not a false positive. ModSec #3415 shows that the recommended rule 200005 to catch this fires too early in phase 2 to be effective. Score 'correct' if the response explains that PCRE limits = potential missed detections (false negatives). Score 'incorrect' if ignored or incorrectly described."
+        },
+        {
+          "id": "A4",
+          "description": "[Tool discovery] generate_exclusion.py referenced for confirmed FPs",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["generate_exclusion", "generate_exclusion.py", "exclusion"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Tool discovery] CRS Sandbox referenced for attack payload verification",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["sandbox.coreruleset.org", "CRS Sandbox", "CRS sandbox", "sandbox"],
+          "min_matches": 1
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "tier": "hard",
+      "name": "cve-virtual-patch-with-evasion",
+      "issue_sources": "CRS #4425/#4424/#4423 (RCE bypass via undetected commands), CRS #4390 (shell alias bypass), CRS #4363 (comment-based SQLi evasion)",
+      "prompt": "URGENT: CVE-2025-29927 — CVSS 9.1 Next.js middleware authorization bypass. Attackers send 'x-middleware-subrequest: middleware' to skip auth. A recursion variant uses 'middleware:middleware:middleware'. Our app is unpatched until next week. I need an emergency WAF virtual patch. Be thorough on evasion — our pentest team will test case variations, URL encoding, and header name casing. Also show me how to regression-test it.",
+      "measures": "Tool discovery: new_incident.sh, validate_rule.py, generate_ftw_test.py. Evasion rigor: case-insensitive, encoding, recursion — ref CRS evasion issues show agents must think like attackers.",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Tool discovery] new_incident.sh invoked or incident workspace created",
+          "grading_method": "code",
+          "check": "file_or_string",
+          "file_check": "incidents/CVE-2025-29927/rules.conf",
+          "string_patterns": ["new_incident", "new_incident.sh", "incident workspace"]
+        },
+        {
+          "id": "A2",
+          "description": "[Evasion] t:lowercase for case-insensitive header detection",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["t:lowercase", "REQUEST_HEADERS_NAMES", "case-insensitive"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Evasion] t:urlDecodeUni or URL-encoding evasion addressed (prompt says pentest will test encoding)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["t:urlDecodeUni", "t:urldecode", "urlDecode", "URL encod", "url-encod", "%6d%69"],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Evasion] Both basic and colon-recursion variants covered",
+          "grading_method": "llm",
+          "rubric": "The patch MUST cover both: (a) basic 'middleware' value, AND (b) colon-recursion 'middleware:middleware:...' or 'middleware:path:middleware'. Ref CRS evasion issues (#4363, #4390): attackers always find variant payloads, so both MUST be handled. Score 'correct' if both covered. Score 'incorrect' if only one."
+        },
+        {
+          "id": "A5",
+          "description": "[Tool discovery] validate_rule.py AND regression testing (go-ftw or generate_ftw_test.py) mentioned",
+          "grading_method": "code",
+          "check": "string_match_all_groups",
+          "groups": [
+            {
+              "patterns": ["validate_rule", "validate_rule.py"],
+              "label": "validation"
+            },
+            {
+              "patterns": ["generate_ftw_test", "go-ftw", "ftw", "regression test", "test case"],
+              "label": "regression_testing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "tier": "hard",
+      "name": "evasion-bypass-analysis",
+      "issue_sources": "CRS #4543 (regex blind spot), CRS #4480 (regex-assembly), CRS #4363 (comment-based evasion), CRS #4390 (shell alias bypass), Coraza #1447 (case regex failure)",
+      "prompt": "Our pentest team found three ways to bypass our CVE-2025-29927 virtual patch. Current rule:\n\nSecRule REQUEST_HEADERS:x-middleware-subrequest '@pm middleware' 'id:100300,phase:1,deny,status:403,log,msg:\"CVE-2025-29927\"'\n\nBypasses: (1) Mixed case 'X-MIDDLEWARE-SUBREQUEST: middleware' — our rule only checks lowercase header name. (2) Colon-recursion 'x-middleware-subrequest: middleware:src/pages/api/auth:middleware' — @pm might not match reliably. (3) URL-encoded '%6d%69%64%64%6c%65%77%61%72%65' — no decode before matching.\n\nExplain why each bypass works. Write a hardened replacement. Make sure the regex won't cause performance issues — we've seen PCRE stack overflows on Windows before (ref: their ModSec bug report).",
+      "measures": "Evasion reasoning: correct root cause per bypass. Tool discovery: lint_regex.py, validate_rule.py. Regex safety awareness: PCRE limits (ref ModSec #3436).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Evasion] Bypass #1 (case) correctly requires t:lowercase or header name normalization",
+          "grading_method": "llm",
+          "rubric": "Bypass #1: REQUEST_HEADERS:x-middleware-subrequest only matches exact lowercase header name, but HTTP headers are case-insensitive (RFC 7230). Fix requires t:lowercase AND/OR REQUEST_HEADERS_NAMES-based matching. Ref Coraza #1447: case-sensitivity bugs in regex matching are real across engines. Score 'correct' if correct root cause AND fix identified. Score 'incorrect' if wrong."
+        },
+        {
+          "id": "A2",
+          "description": "[Evasion] Bypass #2 (recursion) correctly requires substring match not exact match",
+          "grading_method": "llm",
+          "rubric": "Bypass #2: @pm 'middleware' may not reliably match in 'middleware:path:middleware' depending on engine. Fix: use @rx to match 'middleware' as substring anywhere. Ref CRS #4363 (comment-based evasion): partial-match failures are a real bypass category. Score 'correct' if fix ensures substring detection. Score 'incorrect' if @pm kept without change."
+        },
+        {
+          "id": "A3",
+          "description": "[Evasion] Bypass #3 (URL encoding) requires t:urlDecodeUni or t:urldecode",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["t:urlDecodeUni", "t:urldecode", "urlDecode"],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Regex safety] lint_regex.py invoked or PCRE performance concern explicitly addressed (ref ModSec #3436)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["lint_regex", "lint_regex.py", "ReDoS", "PCRE", "pcre", "stack overflow", "backtrack"],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Tool discovery] validate_rule.py invoked on hardened rule",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["validate_rule", "validate_rule.py"],
+          "min_matches": 1
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "tier": "expert",
+      "name": "openapi-to-waf-pipeline",
+      "issue_sources": "CRS #4401 (expand to REQUEST_HEADERS), CRS #4478 (phase splitting), Coraza #1491 (ARGS_RAW double-decoding), Coraza #1499 (performance with rules enabled)",
+      "prompt": "We have a payment API with an OpenAPI spec at evals/files/payment-api.yaml. We want positive-security mode — only allow what the spec permits, block everything else. Generate WAF rules from the spec, make sure they're correct and CRS-compliant, test them, and document the workflow. We run Coraza in Kubernetes, so flag anything that might behave differently from ModSecurity.",
+      "measures": "Full pipeline: openapi_to_rules.py, validate_rule.py, lint_crs_rule.py, generate_ftw_test.py, CRS Sandbox. Compatibility: Coraza-specific considerations (ref #1491, #1499).",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Tool discovery] openapi_to_rules.py invoked on payment-api.yaml",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["openapi_to_rules", "openapi_to_rules.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Tool discovery] validate_rule.py invoked on generated rules",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["validate_rule", "validate_rule.py"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Rule logic] Content-Type enforcement on POST /api/payments",
+          "grading_method": "llm",
+          "rubric": "Generated rules MUST enforce Content-Type: application/json on POST /api/payments. Ref CRS #4401: insufficient variable targeting is a documented gap. Score 'correct' if Content-Type enforcement shown. Score 'incorrect' if missing."
+        },
+        {
+          "id": "A4",
+          "description": "[Rule logic] Authorization header enforcement on POST/DELETE /api/payments/{id}",
+          "grading_method": "llm",
+          "rubric": "Generated rules MUST enforce Authorization header on POST and DELETE /api/payments/{id}. Missing auth enforcement on a payment mutation endpoint is critical. Score 'correct' if shown. Score 'incorrect' if missing."
+        },
+        {
+          "id": "A5",
+          "description": "[Compatibility] Coraza-specific consideration mentioned (performance, ARGS_RAW, directive gaps)",
+          "grading_method": "llm",
+          "rubric": "The prompt says 'we run Coraza in Kubernetes — flag anything that might behave differently'. Does the response mention ANY Coraza-specific consideration? Known issues include: performance overhead (#1499), ARGS_RAW not available (#1491), SecRuleUpdateActionByTag not implemented (#1370), audit log format differences (#1413). Score 'correct' if ANY Coraza-specific note is made. Score 'incorrect' if the response treats Coraza and ModSecurity as identical."
+        }
+      ]
+    }
+  ]
+}

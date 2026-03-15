@@ -15,19 +15,18 @@ fail() { printf "${RED}  ✘ %s${NC}\n" "$1"; FAILED=1; }
 
 # ── Markdown lint ──────────────────────────────────────────────
 step "Markdown lint"
-MD_FILES=(README.md CONTRIBUTING.md SECURITY.md .github/PULL_REQUEST_TEMPLATE.md
-          src/waf-rule-management/SKILL.md src/waf-rule-management/README.md
-          "src/waf-rule-management/references/")
+# Match CI: **/*.md excluding research/, incidents/, examples/
 if command -v markdownlint-cli2 &>/dev/null; then
-    markdownlint-cli2 "${MD_FILES[@]}" && pass "markdownlint" || fail "markdownlint"
+    markdownlint-cli2 "**/*.md" "!research/**" "!**/incidents/**" "!**/examples/**" && pass "markdownlint" || fail "markdownlint"
 elif command -v npx &>/dev/null; then
-    npx markdownlint-cli2 "${MD_FILES[@]}" && pass "markdownlint (npx)" || fail "markdownlint (npx)"
+    npx markdownlint-cli2 "**/*.md" "!research/**" "!**/incidents/**" "!**/examples/**" && pass "markdownlint (npx)" || fail "markdownlint (npx)"
 else
     fail "markdownlint-cli2 not found (npm install -g markdownlint-cli2)"
 fi
 
 # ── YAML lint ──────────────────────────────────────────────────
 step "YAML lint"
+# Match CI: assets/ only (examples/ ignored)
 if command -v yamllint &>/dev/null; then
     yamllint -d relaxed src/waf-rule-management/assets/ && pass "yamllint" || fail "yamllint"
 else
