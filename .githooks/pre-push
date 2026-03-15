@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Pre-push hook — runs lint checks before allowing a push.
+# Install: git config core.hooksPath .githooks
+set -euo pipefail
+
+echo "Running pre-push checks..."
+bash scripts/lint.sh
