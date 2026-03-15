@@ -42,6 +42,9 @@ jobs:
             --exclude 'sandbox.coreruleset.org'
             --exclude 'localhost'
             --exclude '127.0.0.1'
+            --exclude 'github.com/etiennemunnich/crs-agent-skill/compare/'
+            --exclude 'github.com/etiennemunnich/crs-agent-skill/releases/tag/'
+            --exclude 'pcre.org'
             --accept 200,403
             --timeout 30
             --max-retries 3

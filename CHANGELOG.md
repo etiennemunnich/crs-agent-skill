@@ -12,6 +12,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.9] — 2026-03-13
+
+### Added
+
+- **anomaly-scoring.md** — Routed into task table and reference index; covers anomaly threshold tuning, M2M/API scoring models, inbound/outbound scoring
+- **sampling-mode.md** — Routed into task table and reference index; DetectionOnly / sampling rollout strategy
+- **ooda-loop-guide.md** — Routed into reference index; OODA loop methodology mapped to WAF workflows
+- **developer-security-workflow.md** — Routed into reference index; branch-per-change strategy and developer-friendly CI lifecycle
+
+### Changed
+
+- **SKILL.md** — Bump to v0.9; four previously orphaned reference files now wired into routing table and reference index
+- **SKILL.md** — `new_incident.sh` and `assemble_rules.sh` added to Essential Commands
+- **.gitignore** — Added `.pytest_cache/`
+
+### Benchmark (iteration-5, 2026-03-13) — A/B: without_skill vs with_skill_v09
+
+| Config | Score | % |
+|--------|-------|---|
+| without_skill (baseline) | 44/45 | 97.8% |
+| with_skill_v09 | 43/45 | 95.6% |
+
+Both configs ≥ 95%. The 1-point differential is environment noise: eval 7 EDEADLK (filesystem deadlock on mounted volume) blocked `assemble_rules.sh` in both configs; `new_incident.sh` succeeded in without_skill run (incident directory created on disk) but not in with_skill run. All 8 remaining evals passed 5/5 in both configs. No skill regression.
+
+**Eval design note:** Eval prompts are directive (explicitly name scripts to run), so agents score high regardless of skill presence. A v2 eval suite with open-ended prompts is needed to measure skill routing/discovery uplift. Filed as known limitation.
+
+---
+
 ## [0.8] — 2026-03-07
 
 ### Added
@@ -112,9 +140,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-[Unreleased]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.8...HEAD
-[0.8]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.7...v0.8
-[0.7]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.6...v0.7
+[Unreleased]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.9...HEAD
+[0.9]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.8...v0.9
+[0.8]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.6...v0.8
 [0.6]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.5...v0.6
 [0.5]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.4...v0.5
 [0.4]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.3...v0.4

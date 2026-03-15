@@ -21,21 +21,15 @@ ModSecurity, Coraza, and OWASP CRS WAF rule management.
 
 ### Pre-Submission Checklist
 
-Run these before pushing:
+Run before every commit and push:
 
 ```bash
-# Markdown lint (install: npm install -g markdownlint-cli2)
-markdownlint-cli2 "**/*.md" --ignore research
-
-# Python syntax check
-for f in src/waf-rule-management/scripts/*.py; do python -m py_compile "$f"; done
-
-# ShellCheck (install: brew install shellcheck)
-shellcheck src/waf-rule-management/scripts/*.sh
-
-# Verify --help flags work
-for f in src/waf-rule-management/scripts/*.py; do python "$f" --help > /dev/null; done
+bash scripts/lint.sh
 ```
+
+This runs: markdown lint, YAML lint, ShellCheck, Python syntax, `--help` flags, and skill validation.
+
+**Hooks** (optional): `git config core.hooksPath .githooks` — pre-commit and pre-push both run `lint.sh` automatically.
 
 ## What to Contribute
 
