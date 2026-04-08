@@ -2,7 +2,7 @@
 """
 run_evals.py — Orchestrate WAF skill eval runs and grade results.
 
-Calls the Anthropic API for each of the 9 evals, saves responses, grades them
+Calls the Anthropic API for each eval in evals_v2.json, saves responses, grades them
 with grader.py, and produces a benchmark.json. Supports OODA diagnosis.
 
 Usage:
@@ -217,7 +217,7 @@ def build_benchmark(results: list[dict], config: str, iteration: int, diag: dict
         "iteration": iteration,
         "config": config,
         "date": str(date.today()),
-        "eval_suite_version": "2.1",
+        "eval_suite_version": "2.2",
         "eval_count": len(results),
         "summary": {
             "score": total_score,
@@ -247,7 +247,7 @@ def main():
                         help="with_skill loads SKILL.md; without_skill uses base knowledge only")
     parser.add_argument("--skill-file", default="SKILL.md",
                         help="Path to SKILL.md (relative to skill root, or absolute)")
-    parser.add_argument("--eval-id", type=int, help="Run only this eval ID (1-9)")
+    parser.add_argument("--eval-id", type=int, help="Run only this eval ID (see evals_v2.json)")
     parser.add_argument("--iteration", type=int, default=6, help="Benchmark iteration number")
     parser.add_argument("--results-dir", help="Override default results directory")
     parser.add_argument("--grade-only", action="store_true",

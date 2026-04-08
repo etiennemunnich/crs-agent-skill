@@ -8,6 +8,11 @@ __pycache__/
 venv/
 .env
 
+# Root-level eval/run artifacts (generated at runtime)
+ASSERTIONS.json
+EXECUTION_SUMMARY.txt
+REPORT.md
+
 # Generated eval and workspace artifacts (not part of skill distribution)
 crs-eval-review*.html
 iteration-*-eval-viewer.html
@@ -24,7 +29,13 @@ src/waf-rule-management/REPORT.md
 src/waf-rule-management.zip
 
 # Incident workspace outputs (generated at runtime)
-src/waf-rule-management/incidents/*/
+src/waf-rule-management/incidents/
+
+# Eval run results (generated at runtime)
+src/waf-rule-management/evals/results/
+
+# Engine comparison artifacts (generated at runtime)
+src/waf-rule-management/engine-compare/
 
 # Audit logs (generated at runtime)
 src/waf-rule-management/*.log
@@ -48,7 +59,6 @@ research/
 
 # Docker runtime artifacts
 src/waf-rule-management/assets/docker/.env
-src/waf-rule-management/assets/docker/custom-rules.conf
 
 # Node
 node_modules/

@@ -7,7 +7,8 @@ description: >
   and OODA loop methodology. Converts OpenAPI specifications into positive-security
   WAF rules for inclusion before CRS evaluation. Supports false positive analysis,
   rule exclusions, audit log analysis, go-ftw testing, CRS Sandbox testing, regex
-  assembly with crs-toolchain, CRSLang (next-gen rule format), and CI/CD integration.
+  assembly with crs-toolchain, CRSLang (next-gen rule format), CI/CD integration,
+  and CRS v3→v4 exclusion migration.
   Use when the user mentions ModSecurity, Coraza, CRS, SecRule, WAF rules,
   web application firewall, false positives, paranoia level, anomaly scoring,
   audit logs, go-ftw, rule tuning, OpenAPI to WAF, CRSLang, positive security model,
@@ -19,7 +20,7 @@ compatibility: >
   Run scripts/install_tools.sh. Scripts must support --help.
 metadata:
   author: owasp-crs-tooling
-  version: "0.9"
+  version: "1.2"
 ---
 
 # WAF Rule Management
@@ -46,13 +47,13 @@ and Coraza WAF rules with OWASP Core Rule Set (CRS v4.x). Rules must be **effect
 
 ## Quick Start
 
-**First time**: `bash scripts/install_tools.sh` (see [README](README.md)).
+**First time**: `bash scripts/install_tools.sh`.
 
 **Required**: Python 3.8+, PyYAML, Go toolchain, go-ftw, crs-toolchain, crslang, Docker or Finch.
 **Optional fallback**: modsec-rules-check (legacy parser; crslang is primary).
 **Optional**: cdncheck (ingress discovery).
 
-> **Container runtime**: All `docker compose` / `docker logs` commands work identically with `finch compose` / `finch logs`. Replace `docker` with `finch` throughout if Docker is not installed. Scripts auto-detect the available runtime.
+> **Container runtime**: `finch` is preferred; `docker` works identically. All `finch compose` / `finch logs` commands are interchangeable with `docker compose` / `docker logs`. Scripts auto-detect the available runtime.
 
 ### SecRule One-Liner
 
@@ -77,6 +78,7 @@ python scripts/detect_app_profile.py audit.log --output text  # App profile hint
 go-ftw run --cloud --config assets/docker/.ftw.yaml -d tests/  # Regression tests
 bash scripts/new_incident.sh INC-001 "brief title"   # Create incident workspace
 bash scripts/assemble_rules.sh rules/                # Assemble rule set from directory
+bash scripts/engine_integration_compare.sh           # Cross-engine ModSec vs Coraza comparison
 
 # Optional ingress discovery (CDN/cloud/WAF front door)
 go install github.com/projectdiscovery/cdncheck/cmd/cdncheck@latest
@@ -99,6 +101,7 @@ curl -H "x-format-output: txt-matched-rules" \
 | User intent | Load reference |
 |-------------|----------------|
 | False positive / exclusion | [false-positives-and-tuning.md](references/false-positives-and-tuning.md) + [antipatterns-and-troubleshooting.md](references/antipatterns-and-troubleshooting.md) — includes Post-Upgrade / Regex-Change FP section |
+| CRS v3→v4 exception / exclusion migration | [crs-v3-v4-exception-migration.md](references/crs-v3-v4-exception-migration.md) — `ctl:ruleEngine=Off`, plugins, `ver:`, ID checks, REQUEST-900 vs RESPONSE-999 (after [upgrade-and-testing.md](references/upgrade-and-testing.md) for rollout) |
 | Attack not blocked / evasion | [antipatterns-and-troubleshooting.md](references/antipatterns-and-troubleshooting.md) §5 (Rule not matching) |
 | New rule / custom detection | [variables-and-collections.md](references/variables-and-collections.md) → [actions-reference.md](references/actions-reference.md) → [crs-rule-format.md](references/crs-rule-format.md) + [regex-steering-guide.md](references/regex-steering-guide.md) (effective + performant) |
 | Rule validation / Seclang syntax | [crslang-reference.md](references/crslang-reference.md) — crslang is primary; validate_rule.py uses it first |
@@ -224,6 +227,7 @@ Reference installs:
 | [regex-assembly.md](references/regex-assembly.md) | .ra files |
 | [baseline-testing-tools.md](references/baseline-testing-tools.md) | go-test-waf, nuclei |
 | [upgrade-and-testing.md](references/upgrade-and-testing.md) | CRS upgrade |
+| [crs-v3-v4-exception-migration.md](references/crs-v3-v4-exception-migration.md) | v3→v4 exclusion files, ctl changes, plugin registry |
 | [modsecurity-migration-checklist.md](references/modsecurity-migration-checklist.md) | v2→v3 migration |
 | [ja4-ja3-cdn-lb-steering.md](references/ja4-ja3-cdn-lb-steering.md) | TLS fingerprints, CDN |
 | [recommended-mcp-servers.md](references/recommended-mcp-servers.md) | Context7, Chrome DevTools MCP |

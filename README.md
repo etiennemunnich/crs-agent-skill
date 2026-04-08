@@ -4,7 +4,7 @@
 [![CI](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/ci.yml)
 [![Links](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/links.yml)
 [![Skill Validate](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml/badge.svg)](https://github.com/etiennemunnich/crs-agent-skill/actions/workflows/skill-validate.yml)
-[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v0.9-8A2BE2)](https://agentskills.io)
+[![AgentSkill](https://img.shields.io/badge/Agent_Skill-v1.2-8A2BE2)](https://agentskills.io)
 
 Agent skill for writing, validating, testing, and tuning **ModSecurity v3**, **Coraza**, and **OWASP Core Rule Set (CRS)** WAF rules using AI coding assistants.
 
@@ -92,6 +92,7 @@ All scripts live under `src/waf-rule-management/scripts/`.
 | `detect_app_profile.py` | Detect application profile from traffic/log data |
 | `new_incident.sh` | Scaffold an incident response workspace |
 | `assemble_rules.sh` | Assemble active incident rules into `custom-rules.conf` |
+| `engine_integration_compare.sh` | Cross-engine ModSecurity vs Coraza probe+log integration test |
 
 ### Project Scripts
 
@@ -99,8 +100,7 @@ These live under the repo-level `scripts/` directory (not part of the skill pack
 
 | Script | Purpose |
 |--------|---------|
-| `lint.sh` | Repo-wide linting |
-| `engine_integration_compare.sh` | Cross-engine ModSecurity vs Coraza probe+log integration test |
+| `lint.sh` | Repo-wide linting (markdown, YAML, shell, Python, skill validation). Hooks in `.githooks/` run it on commit and push. |
 
 ---
 
@@ -118,11 +118,11 @@ When installed, your AI coding agent gains the ability to:
 | **Incident response** | Scaffold incident workspaces, write virtual patches for zero-day CVEs, per-incident regression tests |
 | **Regex assembly** | Work with `.ra` regex assembly files, crs-toolchain, and fp-finder for CRS development |
 | **CRSLang** | Support for the next-generation CRS rule format and parser validation |
-| **CI/CD integration** | Pre-commit checks, GitHub Actions examples, deploy-with-sampling workflows |
+| **CI/CD integration** | Pre-commit and pre-push hooks (`.githooks/`), `lint.sh`, GitHub Actions, deploy-with-sampling workflows |
 
 ### Progressive Loading
 
-The skill uses **progressive context loading** -- only the routing index loads at startup. Full reference docs (32 files) load on-demand when your task needs them, keeping agent context lean and fast.
+The skill uses **progressive context loading** -- only the routing index loads at startup. Full reference docs (33 files) load on-demand when your task needs them, keeping agent context lean and fast.
 
 ---
 
@@ -130,7 +130,7 @@ The skill uses **progressive context loading** -- only the routing index loads a
 
 | Skill | Path | Description |
 |-------|------|-------------|
-| [WAF Rule Management](src/waf-rule-management/) | `src/waf-rule-management/` | Write, validate, test, and tune ModSec v3 / Coraza rules with CRS. OpenAPI-to-WAF, log analysis, go-ftw, CRS Sandbox, incident response. |
+| [WAF Rule Management](src/waf-rule-management/) | `src/waf-rule-management/` | Write, validate, test, and tune ModSec v3 / Coraza rules with CRS. OpenAPI-to-WAF, log analysis, go-ftw, CRS Sandbox, incident response. [Evals](src/waf-rule-management/evals/) measure skill effectiveness. |
 
 ---
 
@@ -139,7 +139,6 @@ The skill uses **progressive context loading** -- only the routing index loads a
 ```text
 src/waf-rule-management/
 ├── SKILL.md                    # Skill definition and routing index
-├── README.md                   # Detailed skill documentation
 ├── scripts/                    # Executable helpers
 │   ├── install_tools.sh        # Install all required tools
 │   ├── validate_rule.py        # SecRule syntax validation
@@ -153,17 +152,24 @@ src/waf-rule-management/
 │   ├── validate_exclusion.py   # Exclusion rule validator
 │   ├── detect_app_profile.py   # App profile detector
 │   ├── new_incident.sh         # Incident workspace scaffolder
-│   └── assemble_rules.sh       # Multi-incident rule assembly
+│   ├── assemble_rules.sh       # Multi-incident rule assembly
+│   └── engine_integration_compare.sh  # Cross-engine comparison
 ├── examples/                   # Demo rule and test outputs
 │   ├── README.md               # Descriptions and usage
 │   ├── rules-*.conf            # OpenAPI→WAF, exclusions, custom rules
 │   └── *-tests.yaml            # go-ftw test examples
-├── references/                 # 32 on-demand reference docs
+├── evals/                      # [Eval suite](src/waf-rule-management/evals/) — measure skill effectiveness
+│   ├── README.md               # How to run evals
+│   ├── evals_v2.json           # Eval definitions
+│   ├── grader.py               # Grade eval responses
+│   ├── run_evals.py            # Run evals via Anthropic API
+│   └── files/                  # OpenAPI specs for evals
+├── references/                 # 33 on-demand reference docs
 │   ├── actions-reference.md
 │   ├── anomaly-scoring.md
 │   ├── crs-rule-format.md
 │   ├── go-ftw-reference.md
-│   ├── ... and 23 more
+│   ├── ... and 24 more
 │   └── variables-and-collections.md   (and 31 more)
 └── assets/
     ├── mcp-servers.json        # MCP server config template
@@ -174,16 +180,7 @@ src/waf-rule-management/
         └── .env.example                 # Tunable environment variables
 
 scripts/                         # Project-level scripts (NOT part of skill)
-├── lint.sh                      # Repo-wide linting
-└── engine_integration_compare.sh # Cross-engine probe/log comparison
-
-tests/                           # Project-level tests (NOT part of skill)
-├── waf-rule-management/         # Unit tests for skill scripts
-│   ├── fixtures/
-│   ├── test_analyze_log_explain.py
-│   ├── test_detect_app_profile.py
-│   └── test_validate_exclusion.py
-└── integration/                 # Integration test artifacts (gitignored)
+└── lint.sh                      # Repo-wide linting (run before commit/push)
 ```
 
 ---

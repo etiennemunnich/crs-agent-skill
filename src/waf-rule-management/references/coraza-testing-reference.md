@@ -112,6 +112,10 @@ CRS tuning on Coraza uses the **same exclusion syntax** as ModSecurity: `SecRule
 
 **RE2 behavior**: Coraza uses Go's `regexp` (RE2-based) by default. PCRE-only features (lookahead, lookbehind, backreferences) are not supported. CRS v4 rules are RE2-compatible; custom rules intended for both engines should avoid PCRE-only patterns. See [regex-steering-guide.md](regex-steering-guide.md).
 
+### Optional `@rx` prefilter (compile-time)
+
+Upstream Coraza can be built with the Go build tag `coraza.rule.rx_prefilter`, which adds conservative min-length and required-literal checks before running the full regex engine for `@rx` (often faster on benign traffic where most patterns do not match). **Without the tag, behavior matches older builds** (prefilter is a no-op). Container images and vendor builds may or may not enable it—check your image provenance or release notes before assuming it is active. The design is intentionally conservative (when uncertain, the full regex still runs). Merged upstream: [corazawaf/coraza#1534](https://github.com/corazawaf/coraza/pull/1534) (2026-03-31). Docs: [coraza.io/docs](https://coraza.io/docs/), repo [corazawaf/coraza](https://github.com/corazawaf/coraza).
+
 **Config paths**: Custom exclusions go in `/opt/coraza/rules.d/` (Coraza) vs `/etc/modsecurity.d/` (ModSecurity). Mount your exclusion file to the correct path for your engine.
 
 ## Custom Rules and False Positive Testing

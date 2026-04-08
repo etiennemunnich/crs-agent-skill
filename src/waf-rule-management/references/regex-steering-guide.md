@@ -76,7 +76,7 @@ CRS has had ReDoS CVEs: CVE-2019-11387 through CVE-2019-11391; CVE-2020-15598 in
 |----------|----------|-------------|
 | **@pm** | Fixed phrases, small word list (< ~50) | Fast; Aho-Corasick-like |
 | **@pmFromFile** | Large word list, shared across rules | Fast; file-based |
-| **@rx** | Pattern matching, alternation, structure | Slower; PCRE/RE2 engine |
+| **@rx** | Pattern matching, alternation, structure | Slower; PCRE2 (ModSecurity) / Go `regexp` RE2 (Coraza default) |
 | **@streq** | Exact string (e.g. method) | Fastest |
 | **@beginsWith** | Prefix (e.g. path) | Fast |
 | **@contains** | Simple substring | Fast |
@@ -87,6 +87,10 @@ CRS has had ReDoS CVEs: CVE-2019-11387 through CVE-2019-11391; CVE-2020-15598 in
 - **Prefix** → `@beginsWith /admin` not `@rx ^/admin`
 - **Word list** → `@pm select union drop` not `@rx (?:select|union|drop)`
 - **Substring** → `@contains <script` not `@rx <script` (when no regex needed)
+
+### Coraza: optional `@rx` prefilter (compile-time)
+
+Some Coraza builds enable `coraza.rule.rx_prefilter` at compile time (`go build -tags coraza.rule.rx_prefilter`), adding cheap pre-checks before the full `@rx` match for many patterns—useful throughput on CRS-heavy configs, especially when traffic rarely matches each rule. **It is opt-in and not universal**; prebuilt images may omit it. Rule-writing guidance is unchanged: still prefer `@pm` / `@streq` / `@contains` when they express the check. Upstream: [corazawaf/coraza#1534](https://github.com/corazawaf/coraza/pull/1534) (merged 2026-03-31).
 
 ### @rx Only When Necessary
 

@@ -1,5 +1,5 @@
 {
-  "version": "2.1",
+  "version": "2.2",
   "skill_name": "waf-rule-management",
   "design_principles": {
     "prompt_style": "All prompts are IMPLICIT — describe the WAF problem, never name scripts or tools. The skill's routing table and Essential Commands must guide the agent to the right tools. This is the A/B signal.",
@@ -440,6 +440,52 @@
           "description": "[Compatibility] Coraza-specific consideration mentioned (performance, ARGS_RAW, directive gaps)",
           "grading_method": "llm",
           "rubric": "The prompt says 'we run Coraza in Kubernetes — flag anything that might behave differently'. Does the response mention ANY Coraza-specific consideration? Known issues include: performance overhead (#1499), ARGS_RAW not available (#1491), SecRuleUpdateActionByTag not implemented (#1370), audit log format differences (#1413). Score 'correct' if ANY Coraza-specific note is made. Score 'incorrect' if the response treats Coraza and ModSecurity as identical."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "tier": "medium",
+      "name": "crs-v3-v4-exception-migration",
+      "issue_sources": "CRS v3→v4 migration guide, ctl:ruleEngine=Off removal, plugin registry replacing REQUEST-903.9xxx packages",
+      "prompt": "We're upgrading from OWASP CRS 3.3 to CRS v4. Our REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf still uses ctl:ruleEngine=Off on a chained internal health-check rule, and our custom rules say ver:'OWASP_CRS/3.3.9'. We also Include the old WordPress v3 exclusion package path. What has to change for v4, how do runtime ctl exclusions differ from configure-time SecRuleRemove* in RESPONSE-999, and how should we test before production?",
+      "measures": "Skill routing: crs-v3-v4-exception-migration.md. Correct ctl replacement, plugin migration, placement awareness, validation/testing path.",
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[v4 ctl] Replaces or recommends ctl:ruleRemoveByTag=OWASP_CRS (not leaving ruleEngine=Off as the v4 answer)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["ruleRemoveByTag=OWASP_CRS", "ctl:ruleRemoveByTag=OWASP_CRS", "ruleRemoveByTag"],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Plugins] v3 REQUEST-903 application packages → v4 plugin registry",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["plugin-registry", "plugin registry", "coreruleset/plugin-registry", "wordpress-rule-exclusions", "REQUEST-903"],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Metadata] Custom rules should update ver: from OWASP_CRS/3.3.x to a CRS v4 release string",
+          "grading_method": "llm",
+          "rubric": "The response must state that ver:'OWASP_CRS/3.3.9' (or any 3.3.x) should be updated to a CRS v4 release identifier (e.g. OWASP_CRS/4.x.y) aligned with the installed ruleset. Score 'correct' if this is explicit. Score 'incorrect' if ver: is ignored or left at v3 without comment."
+        },
+        {
+          "id": "A4",
+          "description": "[Placement] Distinguishes REQUEST-900 (runtime ctl) vs RESPONSE-999 (configure-time SecRuleRemove/Update*)",
+          "grading_method": "llm",
+          "rubric": "The response must explain that REQUEST-900-style files carry runtime ctl:* actions loaded before CRS, while RESPONSE-999 carries configure-time SecRuleRemove* / SecRuleUpdate* after CRS include. Score 'correct' if both contexts are distinguished. Score 'incorrect' if it conflates them or omits placement guidance."
+        },
+        {
+          "id": "A5",
+          "description": "[Testing] Staging, DetectionOnly, or go-ftw / regression mentioned before production",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": ["go-ftw", "DetectionOnly", "staging", "regression", "validate_exclusion", "validate exclusion"],
+          "min_matches": 1
         }
       ]
     }

@@ -12,7 +12,7 @@ Complete reference for operators and transforms used in ModSecurity v3 and Coraz
 
 | Operator | Description | Example | Performance |
 |----------|-------------|---------|-------------|
-| `@rx` | Regex match (PCRE/RE2) | `@rx /admin` | Slower; PCRE engine |
+| `@rx` | Regex match (PCRE2 on ModSecurity; Go `regexp`/RE2 on Coraza) | `@rx /admin` | Slower than string operators; Coraza may use compile-time `coraza.rule.rx_prefilter` if your binary was built with that tag ([corazawaf/coraza#1534](https://github.com/corazawaf/coraza/pull/1534)) |
 | `@pm` | Phrase match (word list, case-insensitive) | `@pm select union drop` | Fast; Aho-Corasick |
 | `@pmFromFile` | Phrase match from file | `@pmFromFile wordlist.data` | Fast; file-based |
 | `@streq` | Exact string match | `@streq POST` | Fastest |
