@@ -84,6 +84,10 @@ Load directives in this order:
 - Library (embed in app), reverse proxy, or container (e.g. [coraza-crs-docker](https://github.com/coreruleset/coraza-crs-docker)).
 - Integrations: Caddy, Envoy/Istio, HAProxy (SPOA), Nginx.
 
+### Performance note (`@rx`)
+
+When building Coraza from source, an optional compile-time tag `coraza.rule.rx_prefilter` can speed up many non-matching `@rx` evaluations (conservative pre-checks; full regex when needed). It is **not** implied by “using Coraza”—confirm for your binary or container image. This does not replace preferring `@pm`, `@streq`, or `@contains` when they suffice. See [corazawaf/coraza#1534](https://github.com/corazawaf/coraza/pull/1534) and [regex-steering-guide.md](regex-steering-guide.md).
+
 ### Sources
 
 - [Coraza CRS Tutorial](https://coraza.io/docs/tutorials/coreruleset/)

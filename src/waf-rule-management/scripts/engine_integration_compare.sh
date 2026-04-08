@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 # Cross-engine integration check for ModSecurity vs Coraza.
 #
-# Project-level test script — NOT part of the agent skill package.
 # Runs the same payload matrix against both engines, captures audit logs,
-# and generates analysis output via the skill's analyze_log.py.
+# and generates analysis output via analyze_log.py.
 #
-# Usage (from repo root):
+# Usage:
 #   bash scripts/engine_integration_compare.sh [INCIDENT_ID]
 #
 # Example:
 #   bash scripts/engine_integration_compare.sh IT-ENGINE-CHECK-001
 #
 # Artifacts:
-#   tests/integration/<INCIDENT_ID>/
+#   engine-compare/<INCIDENT_ID>/
 #     responses-modsec.txt
 #     responses-coraza.txt
 #     audit-modsec.log
@@ -33,13 +32,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-SKILL_DIR="${REPO_ROOT}/src/waf-rule-management"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 DOCKER_DIR="${SKILL_DIR}/assets/docker"
-ANALYZER="${SKILL_DIR}/scripts/analyze_log.py"
+ANALYZER="${SCRIPT_DIR}/analyze_log.py"
 
 INCIDENT_ID="${1:-IT-ENGINE-CHECK-$(date +%Y%m%d-%H%M%S)}"
-ARTIFACT_DIR="${REPO_ROOT}/tests/integration/${INCIDENT_ID}"
+ARTIFACT_DIR="${SKILL_DIR}/engine-compare/${INCIDENT_ID}"
 mkdir -p "${ARTIFACT_DIR}"
 
 if [ ! -f "${ANALYZER}" ]; then
@@ -144,8 +142,7 @@ wait_ready() {
 }
 
 probe_matrix() {
-  local engine="$1"
-  local out_file="$2"
+  local out_file="$1"
   : > "${out_file}"
 
   run_probe() {
@@ -278,7 +275,7 @@ echo "==> Starting ModSecurity..."
 run_compose "${MODSEC_FILE}" up -d
 wait_ready 30
 echo "==> Running probes against ModSecurity..."
-probe_matrix "modsec" "${ARTIFACT_DIR}/responses-modsec.txt"
+probe_matrix "${ARTIFACT_DIR}/responses-modsec.txt"
 collect_logs "${MODSEC_FILE}" "crs" "${ARTIFACT_DIR}/audit-modsec.log"
 analyze_logs \
   "${ARTIFACT_DIR}/audit-modsec.log" \
@@ -291,7 +288,7 @@ run_compose "${MODSEC_FILE}" down
 run_compose "${CORAZA_FILE}" up -d
 wait_ready 30
 echo "==> Running probes against Coraza..."
-probe_matrix "coraza" "${ARTIFACT_DIR}/responses-coraza.txt"
+probe_matrix "${ARTIFACT_DIR}/responses-coraza.txt"
 collect_logs "${CORAZA_FILE}" "coraza-crs" "${ARTIFACT_DIR}/audit-coraza.log"
 analyze_logs \
   "${ARTIFACT_DIR}/audit-coraza.log" \

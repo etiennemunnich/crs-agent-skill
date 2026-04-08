@@ -319,6 +319,12 @@ ASSERTION_ROUTING_MAP = {
         "A1": {"commands": ["openapi_to_rules.py"], "routing": "Essential Commands → openapi_to_rules.py"},
         "A2": {"commands": ["validate_rule.py"], "routing": "Essential Commands → validate_rule.py"},
     },
+    10: {
+        "A5": {
+            "references": ["crs-v3-v4-exception-migration.md", "go-ftw-reference.md", "upgrade-and-testing.md"],
+            "routing": "Determine Your Task → CRS v3→v4 exception migration; testing before production",
+        },
+    },
 }
 
 
@@ -464,7 +470,7 @@ def main():
     parser = argparse.ArgumentParser(description="Grade WAF skill eval responses")
     parser.add_argument("--response", help="Response text (inline)")
     parser.add_argument("--response-file", help="Path to file containing response text")
-    parser.add_argument("--eval-id", type=int, help="Eval ID (1-9)")
+    parser.add_argument("--eval-id", type=int, help="Eval ID (see evals_v2.json)")
     parser.add_argument("--grade-all", help="Directory containing response .txt files to grade")
     parser.add_argument("--diagnose", action="store_true", help="Run OODA diagnosis on failures")
     parser.add_argument("--output", help="Write JSON results to this file")

@@ -48,6 +48,7 @@ Community practices for upgrading CRS and validating changes. Complements [go-ft
 | Gotcha | Context | Lesson |
 |-------|---------|--------|
 | **Variable renames** | CRS 3 → 4 | `PARANOIA` → `BLOCKING_PARANOIA` in Docker images; check release notes |
+| **Exception file migration** | CRS 3 → 4 | `ctl:ruleEngine=Off` → `ctl:ruleRemoveByTag=OWASP_CRS`; v3 `REQUEST-903.9xxx` packages → v4 plugins — see [crs-v3-v4-exception-migration.md](crs-v3-v4-exception-migration.md) |
 | **Exclusion load order** | All versions | Exclusion loaded after rules = exclusion ignored. Re-validate post-upgrade |
 | **Chain rule exclusion** | All versions | `ctl:ruleRemoveTargetById` with regex fails silently; test each exclusion with curl after upgrade |
 | **New rules at PL1** | Any minor release | New rules can fire at PL1 that didn't exist before; always run DetectionOnly first |

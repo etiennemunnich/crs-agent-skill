@@ -389,7 +389,7 @@ bash scripts/install_tools.sh
 
 ## Documentation Template
 
-Each incident workspace includes a `REPORT.md` with this structure:
+Each incident workspace includes a `REPORT.md` (from `assets/REPORT-template.md`) with this structure:
 
 - Risk ID / advisory link
 - Hypothesis summary

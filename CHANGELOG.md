@@ -12,6 +12,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2] — 2026-04-09
+
+### Added
+
+- **crs-v3-v4-exception-migration.md** — v3.3 → v4.25.0 LTS exception/exclusion migration; attribution to Felipe Zipitria ([gist](https://gist.github.com/fzipi/0e674a93f61e8e577a7bee492d4a6912))
+- **Eval 10** — CRS v3→v4 exception migration eval (evals suite v2.2)
+- **Evals README** — how to run and grade evals
+- **REPORT-template.md** — incident report template; `new_incident.sh` uses it
+- **Coraza `@rx` prefilter note** — optional compile-time `coraza.rule.rx_prefilter` ([corazawaf/coraza#1534](https://github.com/corazawaf/coraza/pull/1534))
+
+### Changed
+
+- **engine_integration_compare.sh** moved from `scripts/` to `src/waf-rule-management/scripts/` (ships with skill)
+- **Removed** `src/waf-rule-management/README.md` — redundant with SKILL.md per Agent Skills spec
+- **.gitignore** — added `evals/results/`, `engine-compare/`, eval runtime artifacts; removed stale `custom-rules.conf` entry
+- **SKILL.md** — routing for v3→v4 migration, engine compare in Essential Commands, removed dead README link
+- **upgrade-and-testing.md** — exception file migration gotcha
+- **References** — Coraza prefilter notes in `best-practices`, `coraza-testing-reference`, `operators-and-transforms`, `regex-steering-guide`
+
+---
+
 ## [0.9] — 2026-03-13
 
 ### Added
@@ -140,7 +161,8 @@ Both configs ≥ 95%. The 1-point differential is environment noise: eval 7 EDEA
 
 ---
 
-[Unreleased]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.9...HEAD
+[Unreleased]: https://github.com/etiennemunnich/crs-agent-skill/compare/v1.2...HEAD
+[1.2]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.9...v1.2
 [0.9]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.8...v0.9
 [0.8]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.6...v0.8
 [0.6]: https://github.com/etiennemunnich/crs-agent-skill/compare/v0.5...v0.6

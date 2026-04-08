@@ -12,7 +12,7 @@
 #   incidents/<INCIDENT_ID>/
 #     tests/            - directory for go-ftw regression test YAML files
 #     rules.conf        - empty file (agent/user writes virtual-patch rules here)
-#     REPORT.md         - empty file (agent/user writes incident report here)
+#     REPORT.md         - from assets/REPORT-template.md (agent/user fills in)
 #
 # The LLM agent populates these files following the conventions in:
 #   references/first-responder-risk-runbook.md
@@ -40,7 +40,13 @@ fi
 # --- Create directory structure ---
 mkdir -p "${INCIDENT_DIR}/tests"
 touch "${INCIDENT_DIR}/rules.conf"
-touch "${INCIDENT_DIR}/REPORT.md"
+ASSETS_DIR="${SKILL_DIR}/assets"
+TEMPLATE="${ASSETS_DIR}/REPORT-template.md"
+if [ -f "$TEMPLATE" ]; then
+    sed "s/<INCIDENT_ID>/${INCIDENT_ID}/g" "$TEMPLATE" > "${INCIDENT_DIR}/REPORT.md"
+else
+    touch "${INCIDENT_DIR}/REPORT.md"
+fi
 
 # --- Rule ID allocation ---
 # Scan existing incidents to find the next free 100-ID block.
