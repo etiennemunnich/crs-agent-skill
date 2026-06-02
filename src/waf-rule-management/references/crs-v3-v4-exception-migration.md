@@ -288,7 +288,6 @@ Use this structure:
 
 - [CRS v4.25.0 LTS announcement](https://coreruleset.org/20260321/announcing-crs-v4-25-lts/) — first LTS for CRS 4; security fixes through Q3 2027
 - [Migrating CRS 3.3 to 4.25 LTS — blog series](https://coreruleset.org/20260330/migrating-crs-3-to-4-part-1-overview/) — official multi-part guide (overview, configuration, plugins, scoring, rule changes, FP tuning, engine notes)
-- [CRS v4 migration docs](https://coreruleset.org/docs/migration/migration_from_v3/)
 - [CRS plugin registry](https://github.com/coreruleset/plugin-registry)
 - [CRS CHANGES — v4.25.0](https://github.com/coreruleset/coreruleset/blob/v4.25.0/CHANGES.md)
 - [ModSecurity v3 reference manual](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x))
