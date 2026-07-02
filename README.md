@@ -48,7 +48,6 @@ bash <SKILL_PATH>/src/waf-rule-management/scripts/install_tools.sh
 | [![Windsurf](https://img.shields.io/badge/Windsurf-06B6D4?logo=codeium&logoColor=white)](https://docs.windsurf.com/windsurf/cascade/skills) | `~/.codeium/windsurf/skills/waf-rule-management` |
 | [![OpenCode](https://img.shields.io/badge/OpenCode-000000?logo=opencode&logoColor=white)](https://opencode.ai/) | `~/.opencode/skills/waf-rule-management` |
 | [![Aider](https://img.shields.io/badge/Aider-000000?logo=aider&logoColor=white)](https://aider.chat/) | Use `aider-skills` or clone into project; see [Aider docs](https://github.com/paul-gauthier/aider) |
-| [![Plandex](https://img.shields.io/badge/Plandex-000000?logo=plandex&logoColor=white)](https://plandex.ai/) | Clone into project; load skill via `.plandex/skills/` or project context |
 | [![AutoPR](https://img.shields.io/badge/AutoPR-000000?logo=github&logoColor=white)](https://github.com/irgolic/AutoPR) | Project-level; reference skill in repo for PR automation |
 
 > **Gemini CLI** also supports `gemini skills install https://github.com/etiennemunnich/crs-agent-skill.git`
