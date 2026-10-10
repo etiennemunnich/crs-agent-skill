@@ -2,7 +2,7 @@
 
 Key ModSecurity v3 directives for rule operations, engine configuration, and logging.
 
-ModSecurity v3.0.14, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
+ModSecurity v3.0.14 (current fixed line is 3.0.16+; see recent-advisories-2026.md), [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
 
 ---
 

@@ -2,7 +2,7 @@
 
 Complete reference for operators and transforms used in ModSecurity v3 and Coraza rules. **Performance**: Prefer `@pm`, `@streq`, `@beginsWith`, `@contains` over `@rx` when they suffice — faster and no ReDoS risk. See [regex-steering-guide.md](regex-steering-guide.md) for full guidance.
 
-**Verified against**: ModSecurity v3.0.14, Coraza v3.3.3, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
+**Verified against**: ModSecurity v3.0.14 (current fixed line is 3.0.16+; see recent-advisories-2026.md), Coraza v3.3.3, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
 
 ---
 

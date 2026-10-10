@@ -6,16 +6,16 @@ This folder holds the **evaluation suite** for the WAF Rule Management skill. Ev
 
 Evals are test prompts. We send each prompt to an AI model (with or without the skill loaded) and check if the answer is correct. That tells us whether the skill actually helps.
 
-**Example:** "We're under a brute-force attack from 185.220.101.0/24. Block only POST /auth/login from that range." We grade whether the model writes a correct ModSecurity rule and uses the right tools. The suite (`evals_v2.json` v2.2) includes **10** evals, including CRS v3→v4 exception migration routing.
+**Example:** "We're under a brute-force attack from 185.220.101.0/24. Block only POST /auth/login from that range." We grade whether the model writes a correct ModSecurity rule and uses the right tools. The suite (`evals_v2.json` v2.3) includes **20** evals: the original 10 plus parser-differential CVEs (11-13), antipatterns (14-15), context gating, advisory triage, rule review, OODA loop-back and upgrade planning (16-20). New `string_absent` and `regex_absent` graders catch harmful advice; set `EVAL_GRADER_MODEL` to change the LLM grader.
 
 ## How to run
 
 ```bash
 # With skill loaded (simulates agent having SKILL.md)
-python evals/run_evals.py --config with_skill --iteration 6
+python evals/run_evals.py --config with_skill --iteration 7
 
 # Without skill (baseline)
-python evals/run_evals.py --config without_skill --iteration 6
+python evals/run_evals.py --config without_skill --iteration 7
 
 # Grade existing results
 python evals/run_evals.py --grade-only --results-dir evals/results/iteration-6/with_skill/

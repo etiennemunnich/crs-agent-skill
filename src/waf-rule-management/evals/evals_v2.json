@@ -1,5 +1,5 @@
 {
-  "version": "2.2",
+  "version": "2.3",
   "skill_name": "waf-rule-management",
   "design_principles": {
     "prompt_style": "All prompts are IMPLICIT — describe the WAF problem, never name scripts or tools. The skill's routing table and Essential Commands must guide the agent to the right tools. This is the A/B signal.",
@@ -14,7 +14,10 @@
       "rule_logic_phase_variables": "Evals 2, 3, 6 — CRS #4478, #4401, ModSec #3415",
       "regex_safety_pcre": "Evals 3, 8 — CRS #4480, ModSec #3436, Coraza #1447",
       "compatibility_modsec_coraza": "Evals 5, 9 — ModSec #3505, #3449, Coraza #1503, #1370",
-      "config_deployment_logging": "Evals 1, 6 — ModSec #3472, Coraza #1550, #1413"
+      "config_deployment_logging": "Evals 1, 6 — ModSec #3472, Coraza #1550, #1413",
+      "parser_differential_and_new_evasion": "Evals 11, 12, 13 — ModSec CVE-2026-52747, CRS 922110/932xxx/XML advisories",
+      "antipatterns": "Evals 14, 15 — regex ctl target, chain rules, PCRE limits",
+      "agent_behaviour": "Evals 16-20 — context gating, triage, review, OODA, upgrade planning"
     },
     "ooda_loop": "run_evals.py --diagnose analyses failures → maps them to SKILL.md routing gaps → suggests fixes → re-run."
   },
@@ -38,7 +41,11 @@
           "description": "[Config] Anomaly scoring and threshold tuning discussed for M2M traffic",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["anomaly", "threshold", "scoring"],
+          "patterns": [
+            "anomaly",
+            "threshold",
+            "scoring"
+          ],
           "min_matches": 2
         },
         {
@@ -46,7 +53,14 @@
           "description": "[Config] Detection-only or sampling mode recommended before blocking",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["detection", "DetectionOnly", "sampling", "detection-only", "log-only", "monitoring mode"],
+          "patterns": [
+            "detection",
+            "DetectionOnly",
+            "sampling",
+            "detection-only",
+            "log-only",
+            "monitoring mode"
+          ],
           "min_matches": 1
         },
         {
@@ -54,7 +68,15 @@
           "description": "[Config/deployment] Audit logging setup mentioned — SecAuditLog, log format, or log analysis tooling",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["SecAuditLog", "audit log", "audit_log", "SecAuditLogParts", "logging", "log analysis", "analyze_log"],
+          "patterns": [
+            "SecAuditLog",
+            "audit log",
+            "audit_log",
+            "SecAuditLogParts",
+            "logging",
+            "log analysis",
+            "analyze_log"
+          ],
           "min_matches": 1
         },
         {
@@ -63,6 +85,9 @@
           "grading_method": "llm",
           "rubric": "Does the response provide a phased upgrade path from lower to higher paranoia levels with criteria for each step (e.g. 'start PL1, tune FPs for 2 weeks, then PL2')? This is critical because real CRS deployments (per #4437, #4359) show that jumping PLs without tuning causes FP storms. Score 'correct' if phases given. Score 'incorrect' if single recommendation with no upgrade plan."
         }
+      ],
+      "tools_used": [
+        "detect_app_profile.py"
       ]
     },
     {
@@ -78,7 +103,10 @@
           "description": "[ModSec logic] Uses @ipMatch or @ipMatchFromFile (not @rx for IP matching)",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["@ipMatch", "@ipMatchFromFile"],
+          "patterns": [
+            "@ipMatch",
+            "@ipMatchFromFile"
+          ],
           "min_matches": 1
         },
         {
@@ -86,7 +114,10 @@
           "description": "[Rule logic — phase] Rule uses phase:1 for early deny before body parsing (ref CRS #4478)",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["phase:1", "phase 1"],
+          "patterns": [
+            "phase:1",
+            "phase 1"
+          ],
           "min_matches": 1
         },
         {
@@ -100,7 +131,10 @@
           "description": "[Tool discovery] validate_rule.py invoked for syntax check",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["validate_rule", "validate_rule.py"],
+          "patterns": [
+            "validate_rule",
+            "validate_rule.py"
+          ],
           "min_matches": 1
         },
         {
@@ -108,8 +142,15 @@
           "description": "[ModSec logic] deny + status:403 + logging action present, rule ID in 100000-199999",
           "grading_method": "code",
           "check": "string_match_all",
-          "patterns": ["deny", "status:403", "log"]
+          "patterns": [
+            "deny",
+            "status:403",
+            "log"
+          ]
         }
+      ],
+      "tools_used": [
+        "validate_rule.py"
       ]
     },
     {
@@ -131,7 +172,14 @@
           "description": "[Regex safety] lint_regex.py invoked or ReDoS risk explicitly addressed (ref ModSec #3436 PCRE overflow)",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["lint_regex", "lint_regex.py", "ReDoS", "catastrophic backtrack", "PCRE", "pcre_limit"],
+          "patterns": [
+            "lint_regex",
+            "lint_regex.py",
+            "ReDoS",
+            "catastrophic backtrack",
+            "PCRE",
+            "pcre_limit"
+          ],
           "min_matches": 1
         },
         {
@@ -139,7 +187,10 @@
           "description": "[Tool discovery] validate_rule.py invoked",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["validate_rule", "validate_rule.py"],
+          "patterns": [
+            "validate_rule",
+            "validate_rule.py"
+          ],
           "min_matches": 1
         },
         {
@@ -147,7 +198,12 @@
           "description": "[Tool discovery] generate_ftw_test.py invoked or go-ftw test YAML produced",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["generate_ftw_test", "generate_ftw_test.py", "go-ftw", "ftw"],
+          "patterns": [
+            "generate_ftw_test",
+            "generate_ftw_test.py",
+            "go-ftw",
+            "ftw"
+          ],
           "min_matches": 1
         },
         {
@@ -156,6 +212,11 @@
           "grading_method": "llm",
           "rubric": "The prompt mentions a glob-character bypass (?asswd). Does the response address this? It should either: (a) write a rule pattern that catches glob wildcards like ? in sensitive paths, (b) explain why this evasion works and how to mitigate it, or (c) note that CRS 932200 has a known blind spot here. Score 'correct' if the glob evasion is addressed in any of these ways. Score 'incorrect' if completely ignored."
         }
+      ],
+      "tools_used": [
+        "validate_rule.py",
+        "lint_regex.py",
+        "go-ftw"
       ]
     },
     {
@@ -171,7 +232,10 @@
           "description": "[Tool discovery] generate_exclusion.py invoked",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["generate_exclusion", "generate_exclusion.py"],
+          "patterns": [
+            "generate_exclusion",
+            "generate_exclusion.py"
+          ],
           "min_matches": 1
         },
         {
@@ -179,7 +243,11 @@
           "description": "[FP rigor] Exclusion scoped to ARGS:q — not a blanket rule removal",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["ARGS:q", "ctl:ruleRemoveTargetById", "ruleRemoveTargetById"],
+          "patterns": [
+            "ARGS:q",
+            "ctl:ruleRemoveTargetById",
+            "ruleRemoveTargetById"
+          ],
           "min_matches": 1
         },
         {
@@ -187,7 +255,12 @@
           "description": "[FP rigor] Runtime ctl: approach, placed BEFORE CRS include",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["ctl:", "runtime", "before the CRS", "before.*include"],
+          "patterns": [
+            "ctl:",
+            "runtime",
+            "before the CRS",
+            "before.*include"
+          ],
           "min_matches": 1
         },
         {
@@ -195,7 +268,10 @@
           "description": "[FP rigor] Exclusion scoped to /api/search URI — not global",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["/api/search", "REQUEST_URI"],
+          "patterns": [
+            "/api/search",
+            "REQUEST_URI"
+          ],
           "min_matches": 1
         },
         {
@@ -204,6 +280,9 @@
           "grading_method": "llm",
           "rubric": "Does the response explain WHY scoping the exclusion to ARGS:q is safer than globally disabling 941130? It MUST mention that other request variables (REQUEST_BODY, REQUEST_HEADERS, other ARGS) remain protected. Real-world FP reports (CRS #4437, #4359) show that narrow scoping is essential because the same rules catch real attacks on other parameters. Score 'correct' if scope-safety reasoning present. Score 'incorrect' if no explanation."
         }
+      ],
+      "tools_used": [
+        "validate_exclusion.py"
       ]
     },
     {
@@ -219,7 +298,11 @@
           "description": "[Tool discovery] generate_exclusion.py invoked with 942100 and /api/graphql",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["generate_exclusion", "942100", "/api/graphql"],
+          "patterns": [
+            "generate_exclusion",
+            "942100",
+            "/api/graphql"
+          ],
           "min_matches": 2
         },
         {
@@ -240,7 +323,10 @@
           "description": "[Tool discovery] validate_rule.py invoked",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["validate_rule", "validate_rule.py"],
+          "patterns": [
+            "validate_rule",
+            "validate_rule.py"
+          ],
           "min_matches": 1
         },
         {
@@ -249,6 +335,10 @@
           "grading_method": "llm",
           "rubric": "Does the response warn against disabling 942100 globally or dropping paranoia level? Score 'correct' if warning present. Score 'incorrect' if global disable recommended without qualification."
         }
+      ],
+      "tools_used": [
+        "validate_exclusion.py",
+        "engine_integration_compare.sh"
       ]
     },
     {
@@ -270,7 +360,10 @@
           "description": "[Tool discovery] analyze_log.py referenced for per-rule drill-down",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["analyze_log", "analyze_log.py"],
+          "patterns": [
+            "analyze_log",
+            "analyze_log.py"
+          ],
           "min_matches": 1
         },
         {
@@ -284,7 +377,11 @@
           "description": "[Tool discovery] generate_exclusion.py referenced for confirmed FPs",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["generate_exclusion", "generate_exclusion.py", "exclusion"],
+          "patterns": [
+            "generate_exclusion",
+            "generate_exclusion.py",
+            "exclusion"
+          ],
           "min_matches": 1
         },
         {
@@ -292,9 +389,17 @@
           "description": "[Tool discovery] CRS Sandbox referenced for attack payload verification",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["sandbox.coreruleset.org", "CRS Sandbox", "CRS sandbox", "sandbox"],
+          "patterns": [
+            "sandbox.coreruleset.org",
+            "CRS Sandbox",
+            "CRS sandbox",
+            "sandbox"
+          ],
           "min_matches": 1
         }
+      ],
+      "tools_used": [
+        "analyze_log.py"
       ]
     },
     {
@@ -311,14 +416,22 @@
           "grading_method": "code",
           "check": "file_or_string",
           "file_check": "incidents/CVE-2025-29927/rules.conf",
-          "string_patterns": ["new_incident", "new_incident.sh", "incident workspace"]
+          "string_patterns": [
+            "new_incident",
+            "new_incident.sh",
+            "incident workspace"
+          ]
         },
         {
           "id": "A2",
           "description": "[Evasion] t:lowercase for case-insensitive header detection",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["t:lowercase", "REQUEST_HEADERS_NAMES", "case-insensitive"],
+          "patterns": [
+            "t:lowercase",
+            "REQUEST_HEADERS_NAMES",
+            "case-insensitive"
+          ],
           "min_matches": 1
         },
         {
@@ -326,7 +439,14 @@
           "description": "[Evasion] t:urlDecodeUni or URL-encoding evasion addressed (prompt says pentest will test encoding)",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["t:urlDecodeUni", "t:urldecode", "urlDecode", "URL encod", "url-encod", "%6d%69"],
+          "patterns": [
+            "t:urlDecodeUni",
+            "t:urldecode",
+            "urlDecode",
+            "URL encod",
+            "url-encod",
+            "%6d%69"
+          ],
           "min_matches": 1
         },
         {
@@ -342,15 +462,28 @@
           "check": "string_match_all_groups",
           "groups": [
             {
-              "patterns": ["validate_rule", "validate_rule.py"],
+              "patterns": [
+                "validate_rule",
+                "validate_rule.py"
+              ],
               "label": "validation"
             },
             {
-              "patterns": ["generate_ftw_test", "go-ftw", "ftw", "regression test", "test case"],
+              "patterns": [
+                "generate_ftw_test",
+                "go-ftw",
+                "ftw",
+                "regression test",
+                "test case"
+              ],
               "label": "regression_testing"
             }
           ]
         }
+      ],
+      "tools_used": [
+        "validate_rule.py",
+        "generate_ftw_test.py"
       ]
     },
     {
@@ -378,7 +511,11 @@
           "description": "[Evasion] Bypass #3 (URL encoding) requires t:urlDecodeUni or t:urldecode",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["t:urlDecodeUni", "t:urldecode", "urlDecode"],
+          "patterns": [
+            "t:urlDecodeUni",
+            "t:urldecode",
+            "urlDecode"
+          ],
           "min_matches": 1
         },
         {
@@ -386,7 +523,15 @@
           "description": "[Regex safety] lint_regex.py invoked or PCRE performance concern explicitly addressed (ref ModSec #3436)",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["lint_regex", "lint_regex.py", "ReDoS", "PCRE", "pcre", "stack overflow", "backtrack"],
+          "patterns": [
+            "lint_regex",
+            "lint_regex.py",
+            "ReDoS",
+            "PCRE",
+            "pcre",
+            "stack overflow",
+            "backtrack"
+          ],
           "min_matches": 1
         },
         {
@@ -394,9 +539,16 @@
           "description": "[Tool discovery] validate_rule.py invoked on hardened rule",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["validate_rule", "validate_rule.py"],
+          "patterns": [
+            "validate_rule",
+            "validate_rule.py"
+          ],
           "min_matches": 1
         }
+      ],
+      "tools_used": [
+        "lint_regex.py",
+        "generate_ftw_test.py"
       ]
     },
     {
@@ -412,7 +564,10 @@
           "description": "[Tool discovery] openapi_to_rules.py invoked on payment-api.yaml",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["openapi_to_rules", "openapi_to_rules.py"],
+          "patterns": [
+            "openapi_to_rules",
+            "openapi_to_rules.py"
+          ],
           "min_matches": 1
         },
         {
@@ -420,7 +575,10 @@
           "description": "[Tool discovery] validate_rule.py invoked on generated rules",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["validate_rule", "validate_rule.py"],
+          "patterns": [
+            "validate_rule",
+            "validate_rule.py"
+          ],
           "min_matches": 1
         },
         {
@@ -441,6 +599,9 @@
           "grading_method": "llm",
           "rubric": "The prompt says 'we run Coraza in Kubernetes — flag anything that might behave differently'. Does the response mention ANY Coraza-specific consideration? Known issues include: performance overhead (#1499), ARGS_RAW not available (#1491), SecRuleUpdateActionByTag not implemented (#1370), audit log format differences (#1413). Score 'correct' if ANY Coraza-specific note is made. Score 'incorrect' if the response treats Coraza and ModSecurity as identical."
         }
+      ],
+      "tools_used": [
+        "openapi_to_rules.py"
       ]
     },
     {
@@ -456,7 +617,11 @@
           "description": "[v4 ctl] Replaces or recommends ctl:ruleRemoveByTag=OWASP_CRS (not leaving ruleEngine=Off as the v4 answer)",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["ruleRemoveByTag=OWASP_CRS", "ctl:ruleRemoveByTag=OWASP_CRS", "ruleRemoveByTag"],
+          "patterns": [
+            "ruleRemoveByTag=OWASP_CRS",
+            "ctl:ruleRemoveByTag=OWASP_CRS",
+            "ruleRemoveByTag"
+          ],
           "min_matches": 1
         },
         {
@@ -464,7 +629,13 @@
           "description": "[Plugins] v3 REQUEST-903 application packages → v4 plugin registry",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["plugin-registry", "plugin registry", "coreruleset/plugin-registry", "wordpress-rule-exclusions", "REQUEST-903"],
+          "patterns": [
+            "plugin-registry",
+            "plugin registry",
+            "coreruleset/plugin-registry",
+            "wordpress-rule-exclusions",
+            "REQUEST-903"
+          ],
           "min_matches": 1
         },
         {
@@ -484,7 +655,745 @@
           "description": "[Testing] Staging, DetectionOnly, or go-ftw / regression mentioned before production",
           "grading_method": "code",
           "check": "string_match",
-          "patterns": ["go-ftw", "DetectionOnly", "staging", "regression", "validate_exclusion", "validate exclusion"],
+          "patterns": [
+            "go-ftw",
+            "DetectionOnly",
+            "staging",
+            "regression",
+            "validate_exclusion",
+            "validate exclusion"
+          ],
+          "min_matches": 1
+        }
+      ],
+      "tools_used": [
+        "validate_exclusion.py",
+        "go-ftw"
+      ]
+    },
+    {
+      "id": 11,
+      "tier": "hard",
+      "name": "multipart-parser-differential-cve",
+      "issue_sources": "ModSecurity CVE-2026-52747 (fixed 3.0.16), CRS CVE-2026-21876 (922110), WAFFLED parser-differential research",
+      "prompt": "Our pentesters showed that multipart/form-data requests with odd line breaks in non-file fields reach the app with a payload our WAF rules never saw in ARGS_POST. We run ModSecurity v3 (not sure which patch version) with CRS v4 at PL2. What is going on, what do we do today, and how do we make sure we are not relying on rules alone?",
+      "measures": "Parser-differential awareness: upgrade engine, multipart strictness, body-processor errors, regression test.",
+      "tools_used": [
+        "generate_ftw_test.py",
+        "go-ftw"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Upgrade] Engine upgrade to fixed release (3.0.16+) recommended",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "3.0.16",
+            "upgrade",
+            "patched version"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Parser diff] Names parser differential / mismatch",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "parser differential",
+            "parsing differential",
+            "parser mismatch",
+            "differential",
+            "discrepancy"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Controls] Multipart strictness or body-processor error handling",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "MULTIPART_STRICT_ERROR",
+            "REQBODY_ERROR",
+            "MULTIPART_UNMATCHED_BOUNDARY",
+            "strict"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Test] Regression test for the evasion",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "go-ftw",
+            "ftw",
+            "regression test",
+            "test case"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Honesty] Does not claim a custom rule fully fixes an engine parser bug",
+          "grading_method": "llm",
+          "rubric": "The response must make clear that an engine-level parser bug is fixed by upgrading and/or rejecting malformed multipart requests, not only by adding signature rules. Score 'correct' if it says rules alone are insufficient or sequences upgrade first. Score 'incorrect' if it presents a regex rule as a complete fix."
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "tier": "hard",
+      "name": "xml-attribute-value-bypass",
+      "issue_sources": "CRS GHSA-6jp8-c2w2-x7wr (XML attribute values; secondary source - verify)",
+      "prompt": "We accept SOAP/XML on POST /ws/orders at CRS v4 PL1. A tester put an XSS payload inside an XML attribute value (<item note=\"...\"/>) and nothing fired, while the same payload in element text is blocked. Why, and how should we respond?",
+      "measures": "XML body processor scope awareness; attribute targets; upgrade; virtual patch with correct targets.",
+      "tools_used": [
+        "go-ftw"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[XML targets] Mentions XML body variable targets",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "XML:/*",
+            "XML:/",
+            "@*",
+            "XPath",
+            "xpath"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Attribute] Identifies attribute values as the gap",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "attribute"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Upgrade] Recommends upgrading CRS/checking advisory",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "upgrade",
+            "advisory",
+            "GHSA",
+            "release notes",
+            "latest CRS"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Test] Regression test",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "go-ftw",
+            "ftw",
+            "regression",
+            "test"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Bad advice] Does not recommend disabling inspection",
+          "grading_method": "code",
+          "check": "string_absent",
+          "patterns": [
+            "SecRuleEngine Off",
+            "SecRequestBodyAccess Off"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "tier": "hard",
+      "name": "path-based-command-injection-rce",
+      "issue_sources": "CRS 4.30.0 / 4.25.2 LTS GHSA-575j-qr6p-9763 (secondary source - verify)",
+      "prompt": "A pentest got command execution past CRS v4.24 at PL1 using absolute binary paths like /usr/bin/id and /???/c?t in a parameter, with no obvious shell keywords. Which rule family is involved, what is the permanent fix, and what interim mitigation can we apply?",
+      "measures": "RCE rule family 932xxx; upgrade to fixed CRS/LTS; interim rule with transforms; PL guidance.",
+      "tools_used": [
+        "lint_regex.py",
+        "validate_rule.py"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Family] 932xxx RCE rules",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "932"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Fix] Upgrade to 4.30 / 4.25.2 LTS or newer",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "4.30",
+            "4.25.2",
+            "upgrade",
+            "LTS"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Interim] Interim custom rule uses transformations and custom ID range",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "t:urlDecodeUni",
+            "t:lowercase",
+            "t:normalizePath",
+            "id:1"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Validate] Rule linted or validated before deploy",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "lint_regex",
+            "validate_rule",
+            "lint_crs_rule",
+            "go-ftw"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[PL] Considers paranoia level / FP impact",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response discusses paranoia level placement or false-positive trade-off, or recommends testing impact. 'incorrect' otherwise."
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "tier": "medium",
+      "name": "chain-rule-regex-target-antipattern",
+      "issue_sources": "ModSecurity #3505, Coraza #1503, CRS 932370 chain",
+      "prompt": "We wrote: SecRule REQUEST_URI \"@beginsWith /api/\" \"id:100050,phase:1,pass,nolog,ctl:ruleRemoveTargetById=932370;ARGS:/^url_.*/\" and put it after our CRS include. Rule 932370 still blocks JSON bodies with URL fields on Nginx+ModSecurity v3. Why, and what is the right fix?",
+      "measures": "Three antipatterns at once: regex in ctl target, chained rule needs ruleRemoveById, placement after CRS.",
+      "tools_used": [
+        "validate_exclusion.py"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Regex target] Regex in ctl target does not work",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "regex",
+            "literal",
+            "silently"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A2",
+          "description": "[Chain] Chained rule requires ctl:ruleRemoveById",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ctl:ruleRemoveById",
+            "chain"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A3",
+          "description": "[Placement] Runtime ctl must be BEFORE the CRS include",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "before the CRS",
+            "before CRS",
+            "BEFORE-CRS",
+            "before the include"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Scope] Narrow scope by URI",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "@beginsWith",
+            "scoped",
+            "narrow",
+            "REQUEST_URI"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Bad advice] No global removal",
+          "grading_method": "code",
+          "check": "string_absent",
+          "patterns": [
+            "disable 932 entirely",
+            "remove all 932",
+            "SecRuleRemoveByTag attack-rce"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "tier": "medium",
+      "name": "pcre-limits-200004-diagnosis",
+      "issue_sources": "ModSecurity 200004 MSC_PCRE_LIMITS_EXCEEDED, v2 vs v3 PCRE2",
+      "prompt": "Marketing traffic with long utm_/fbclid query strings is getting 403s and our log says 'Rule 200004 / MSC_PCRE_LIMITS_EXCEEDED'. We run ModSecurity v3 on Nginx. Someone suggested setting SecPcreMatchLimit to 250000. Thoughts?",
+      "measures": "Engine-aware answer: SecPcreMatchLimit is v2-only; v3 PCRE2 limits compile-time; avoid huge limits; fix ReDoS.",
+      "tools_used": [
+        "lint_regex.py",
+        "analyze_log.py"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[v2 vs v3] SecPcreMatchLimit is v2 / not a v3 runtime directive",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "v2",
+            "not available in v3",
+            "compile-time",
+            "PCRE2"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Bad advice] Does not endorse 250000",
+          "grading_method": "code",
+          "check": "string_absent",
+          "patterns": [
+            "set it to 250000",
+            "use 250000",
+            "250000 is fine"
+          ]
+        },
+        {
+          "id": "A3",
+          "description": "[Root cause] Identifies regex cost / long args",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ReDoS",
+            "backtracking",
+            "regex",
+            "long query"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Tooling] Log analysis or regex lint",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "lint_regex",
+            "analyze_log",
+            "audit log"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Judgement] Does not simply endorse a very large limit",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response says raising limits (where applicable) should only follow confirming legitimate traffic and sound regexes, or recommends fixing the regex or scoping the tracking params instead. Score 'incorrect' if it endorses a very large limit."
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "tier": "medium",
+      "name": "configuration-context-gating",
+      "issue_sources": "Slack #coreruleset FP analysis: missing PL/engine/version context",
+      "prompt": "Rule 942100 is blocking one of our requests. Give me the exclusion rule to add.",
+      "measures": "Agent must ask for or state assumptions about the context fields before emitting an exclusion.",
+      "tools_used": [],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Asks PL] Paranoia level",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "paranoia"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Asks engine] Engine/version",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ModSecurity",
+            "Coraza",
+            "engine"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Asks match] Triggering payload / matched variable / audit log",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "matched variable",
+            "payload",
+            "audit log",
+            "MATCHED_VAR"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Asks app] Application/endpoint context",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "endpoint",
+            "application",
+            "URI",
+            "path"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Gating] No definitive blanket exclusion without context",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response asks clarifying questions or clearly labels any rule as an assumption-dependent template, and does not recommend removing 942100 globally. Score 'incorrect' if it delivers an unscoped SecRuleRemoveById as the answer."
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "tier": "medium",
+      "name": "advisory-triage-standalone",
+      "issue_sources": "CRS GitHub security advisories; CVE triage workflow",
+      "prompt": "A new CVE says CRS rule 922110 can be bypassed with a crafted multipart charset parameter. We run CRS 4.20 with ModSecurity v3 behind a CDN. Triage this for us: are we affected, how bad is it, and what's the response plan?",
+      "measures": "Triage structure: affected versions, severity reasoning, upgrade vs workaround, verification.",
+      "tools_used": [
+        "go-ftw"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Affected] Compares installed to fixed version",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "4.22",
+            "3.3.8",
+            "fixed in",
+            "affected"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A2",
+          "description": "[Severity] Reasons about exposure",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "exposure",
+            "multipart",
+            "CDN",
+            "severity",
+            "CVSS"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A3",
+          "description": "[Plan] Upgrade primary, workaround interim",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "upgrade",
+            "workaround",
+            "mitigat"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A4",
+          "description": "[Verify] Test or detection after fix",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "go-ftw",
+            "test",
+            "verify",
+            "regression"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Rigor] Does not invent details",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if claims are grounded in the stated CVE/rule and anything unverifiable is flagged (e.g., confirm against the advisory). Score 'incorrect' if specific unverifiable details are fabricated as fact."
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "tier": "medium",
+      "name": "rule-contribution-review",
+      "issue_sources": "CRS contribution guidelines, regex-steering, ModSecurity chain semantics",
+      "prompt": "Please review the proposed WAF rules in evals/files/rule-diff-review.conf before we merge them. Be specific about problems and give a corrected version.",
+      "measures": "Catches: CRS-reserved ID 942999, nested quantifier (.*)*, missing tags/ver, @rx where @pm/@streq fits, chain structure.",
+      "tools_used": [
+        "lint_crs_rule.py",
+        "lint_regex.py",
+        "validate_rule.py"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[ID range] Flags 942999 outside custom range",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "942999",
+            "100000",
+            "custom range",
+            "reserved"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A2",
+          "description": "[ReDoS] Flags nested quantifier",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ReDoS",
+            "nested quantifier",
+            "catastrophic",
+            "backtracking",
+            "(.*)*"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Operator] Suggests simpler operator",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "@pm",
+            "@streq",
+            "@beginsWith",
+            "@within"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Metadata] tags/ver/severity or logging actions",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "tag:",
+            "ver:",
+            "severity",
+            "logdata"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Tooling] Names lint/validate scripts",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "lint_crs_rule",
+            "lint_regex",
+            "validate_rule"
+          ],
+          "min_matches": 1
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "tier": "hard",
+      "name": "ooda-loopback-after-failed-validation",
+      "issue_sources": "Grandpa Loop / OODA, backpressure",
+      "prompt": "We added exclusion rule 100070 for a false positive on /api/search but go-ftw says the original FP request still gets 403 and a new attack test that used to block now passes. Walk through how you would diagnose and fix this without making it worse.",
+      "measures": "Observe-orient-decide-act loop-back: re-read audit log, check placement, check over-broad exclusion, rerun both tests.",
+      "tools_used": [
+        "analyze_log.py",
+        "validate_exclusion.py",
+        "go-ftw"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Observe] Re-examines audit log / matched rule ids",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "audit log",
+            "analyze_log",
+            "matched rule",
+            "debug log"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Placement] Checks exclusion placement/order",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "before the CRS",
+            "after the CRS",
+            "placement",
+            "order",
+            "phase"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Over-broad] Recognises over-broad exclusion",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "too broad",
+            "over-broad",
+            "overly broad",
+            "narrow",
+            "scope"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Both tests] Re-runs FP and attack tests",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "go-ftw",
+            "regression",
+            "both",
+            "attack test"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Loop] Iterative loop not a one-shot patch",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response describes iterating (observe, diagnose, adjust, re-test) and rolling back or narrowing the exclusion. Score 'incorrect' if it just adds another exclusion or disables rules."
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "tier": "medium",
+      "name": "crs-lts-and-engine-choice",
+      "issue_sources": "CRS 4.25 LTS, CRS 3.3.x end of support (verify), Coraza compatibility",
+      "prompt": "We are still on CRS 3.3.x with ModSecurity v2 / Apache. Plan the move: which CRS track should we target (LTS or current), should we also change engines, and what breaks for us along the way?",
+      "measures": "LTS vs current, 3.3.x end of support, v2 -> v3/Coraza, SecWebAppID, ctl/ver changes.",
+      "tools_used": [
+        "go-ftw"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Track] Discusses LTS vs current",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "LTS",
+            "4.25",
+            "long-term"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[EOL] 3.3.x support ending",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "end of life",
+            "EOL",
+            "end of support",
+            "no longer supported",
+            "unsupported"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Engine] Compares engine options",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ModSecurity v3",
+            "libmodsecurity",
+            "Coraza"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Breaking] Names concrete breaking changes",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ctl:ruleEngine",
+            "ver:",
+            "plugin",
+            "anomaly",
+            "REQUEST-903",
+            "SecWebAppID"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A5",
+          "description": "[Test] Staged testing",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "go-ftw",
+            "DetectionOnly",
+            "staging",
+            "regression"
+          ],
           "min_matches": 1
         }
       ]

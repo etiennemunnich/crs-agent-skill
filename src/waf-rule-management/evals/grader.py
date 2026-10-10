@@ -102,7 +102,27 @@ def grade_file_or_string(response: str, assertion: dict) -> tuple[bool, str]:
     return passed, detail
 
 
+def grade_string_absent(response: str, assertion: dict) -> tuple[bool, str]:
+    """None of the forbidden patterns may appear (case-insensitive). Catches harmful advice."""
+    patterns = assertion.get("patterns", [])
+    present = [p for p in patterns if p.lower() in response.lower()]
+    passed = len(present) == 0
+    detail = f"Forbidden present: {present}" if present else "No forbidden patterns"
+    return passed, detail
+
+
+def grade_regex_absent(response: str, assertion: dict) -> tuple[bool, str]:
+    """Regex must NOT match anywhere in the response."""
+    pattern = assertion.get("pattern", "")
+    match = re.search(pattern, response, re.IGNORECASE)
+    passed = match is None
+    detail = f"Regex '{pattern}': {'absent' if passed else 'FOUND ' + repr(match.group(0))}"
+    return passed, detail
+
+
 CODE_GRADERS = {
+    "string_absent": grade_string_absent,
+    "regex_absent": grade_regex_absent,
     "string_match": grade_string_match,
     "string_match_all": grade_string_match_all,
     "string_match_all_groups": grade_string_match_all_groups,
@@ -157,7 +177,7 @@ def grade_llm(response: str, assertion: dict, eval_prompt: str = "") -> tuple[bo
 
     try:
         msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=os.environ.get("EVAL_GRADER_MODEL", "claude-haiku-4-5-20251001"),
             max_tokens=1024,
             system=LLM_GRADER_SYSTEM,
             messages=[{"role": "user", "content": prompt}]

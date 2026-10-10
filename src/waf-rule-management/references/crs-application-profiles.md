@@ -2,7 +2,7 @@
 
 Application-specific CRS tuning for common platforms. CRS ships pre-built exclusion packages; use them before writing custom exclusions.
 
-**Verified against** (2026-02-15):
+**Verified against** (2026-02-15; exclusion package list should be re-checked against your installed CRS release):
 - CRS docs: https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/
 - CRS plugins docs: https://coreruleset.org/docs/4-about-plugins/4-1-plugins/
 - CRS plugin registry: https://github.com/coreruleset/plugin-registry

@@ -4,7 +4,7 @@ Ensures WAF rules are **effective** (detect attacks), **performant** (no ReDoS, 
 
 **Core principle**: Prefer `@pm`/`@streq`/`@beginsWith`/`@contains` when they suffice — faster and no ReDoS risk. Use `@rx` only when pattern structure is needed.
 
-**Verified against**: ModSecurity v3.0.14, Coraza v3.3.3, CRS v4.23.0 (Feb 2025).
+**Verified against**: ModSecurity v3.0.14 (current fixed line is 3.0.16+; see recent-advisories-2026.md), Coraza v3.3.3, CRS v4.23.0 (Feb 2025).
 
 ---
 

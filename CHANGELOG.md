@@ -10,6 +10,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **recent-advisories-2026.md** — 2026 CVE/GHSA triage table, release tracks, parser-differential response order (secondary-sourced items marked *verify*)
+- **Evals 11-20** (suite v2.3) — multipart/XML/RCE evasion, chain-rule and PCRE antipatterns, context gating, advisory triage, rule review, OODA loop-back, LTS/engine planning; `tools_used` populated for all evals; `evals/files/rule-diff-review.conf`
+- `string_absent` / `regex_absent` graders; `EVAL_GRADER_MODEL` env override; offline grader tests
+
+### Changed
+
+- Version notes in references updated (ModSecurity 3.0.16+ current); SKILL.md routing row for new advisories
+
 ---
 
 ## [1.2] — 2026-04-09

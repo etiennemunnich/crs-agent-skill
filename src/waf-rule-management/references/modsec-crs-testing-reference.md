@@ -2,7 +2,7 @@
 
 Primary testing reference for ModSecurity v3 with OWASP Core Rule Set. For Coraza cross-engine testing, see [coraza-testing-reference.md](coraza-testing-reference.md).
 
-**Verified against**: ModSecurity v3.0.14, CRS v4.23.0, go-ftw v2.0.0 (Feb 2025).
+**Verified against**: ModSecurity v3.0.14 (current fixed line is 3.0.16+; see recent-advisories-2026.md), CRS v4.23.0, go-ftw v2.0.0 (Feb 2025).
 
 ## Official Sources
 

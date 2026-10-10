@@ -102,6 +102,7 @@ curl -H "x-format-output: txt-matched-rules" \
 |-------------|----------------|
 | False positive / exclusion | [false-positives-and-tuning.md](references/false-positives-and-tuning.md) + [antipatterns-and-troubleshooting.md](references/antipatterns-and-troubleshooting.md) — includes Post-Upgrade / Regex-Change FP section |
 | CRS v3→v4 exception / exclusion migration | [crs-v3-v4-exception-migration.md](references/crs-v3-v4-exception-migration.md) — `ctl:ruleEngine=Off`, plugins, `ver:`, ID checks, REQUEST-900 vs RESPONSE-999 (after [upgrade-and-testing.md](references/upgrade-and-testing.md) for rollout) |
+| New CVE / advisory / parser-differential bypass (multipart, XML attribute, parameter pollution) | [recent-advisories-2026.md](references/recent-advisories-2026.md) — affected/fixed versions, response order (upgrade → reject malformed bodies → regression test); confirm *verify* items on the primary advisory |
 | Attack not blocked / evasion | [antipatterns-and-troubleshooting.md](references/antipatterns-and-troubleshooting.md) §5 (Rule not matching) |
 | New rule / custom detection | [variables-and-collections.md](references/variables-and-collections.md) → [actions-reference.md](references/actions-reference.md) → [crs-rule-format.md](references/crs-rule-format.md) + [regex-steering-guide.md](references/regex-steering-guide.md) (effective + performant) |
 | Rule validation / Seclang syntax | [crslang-reference.md](references/crslang-reference.md) — crslang is primary; validate_rule.py uses it first |
@@ -228,6 +229,7 @@ Reference installs:
 | [baseline-testing-tools.md](references/baseline-testing-tools.md) | go-test-waf, nuclei |
 | [upgrade-and-testing.md](references/upgrade-and-testing.md) | CRS upgrade |
 | [crs-v3-v4-exception-migration.md](references/crs-v3-v4-exception-migration.md) | v3→v4 exclusion files, ctl changes, plugin registry |
+| [recent-advisories-2026.md](references/recent-advisories-2026.md) | 2026 CVE/GHSA triage table, release tracks, parser-differential response |
 | [modsecurity-migration-checklist.md](references/modsecurity-migration-checklist.md) | v2→v3 migration |
 | [ja4-ja3-cdn-lb-steering.md](references/ja4-ja3-cdn-lb-steering.md) | TLS fingerprints, CDN |
 | [recommended-mcp-servers.md](references/recommended-mcp-servers.md) | Context7, Chrome DevTools MCP |

@@ -2,7 +2,7 @@
 
 Complete reference for variables used in ModSecurity v3 and Coraza rules.
 
-**Verified against**: ModSecurity v3.0.14, [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
+**Verified against**: ModSecurity v3.0.14 (current fixed line is 3.0.16+; see recent-advisories-2026.md), [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
 
 ---
 
