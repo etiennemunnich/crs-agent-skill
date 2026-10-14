@@ -44,7 +44,7 @@ def extract_rx_patterns(content: str, path: Path) -> List[Tuple[int, str, str]]:
         results.append((line_no, m.group(0), pattern))
     # 2) Quote-delimited: @rx "pattern" or @rx 'pattern'
     quote_re = re.compile(
-        r'@rx\s+(["\'])((?:(?!\1).|\\.)*)\1',
+        r'@rx\s+(["\'])((?:\\.|(?!\1)[^\\])*)\1',
         re.MULTILINE | re.DOTALL,
     )
     for m in quote_re.finditer(content):
