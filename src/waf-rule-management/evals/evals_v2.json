@@ -1269,7 +1269,7 @@
       "id": 19,
       "tier": "hard",
       "name": "ooda-loopback-after-failed-validation",
-      "issue_sources": "Grandpa Loop / OODA, backpressure",
+      "issue_sources": "OODA loop-back after a failed validation",
       "prompt": "We added exclusion rule 100070 for a false positive on /api/search but go-ftw says the original FP request still gets 403 and a new attack test that used to block now passes. Walk through how you would diagnose and fix this without making it worse.",
       "measures": "Observe-orient-decide-act loop-back: re-read audit log, check placement, check over-broad exclusion, rerun both tests.",
       "tools_used": [
