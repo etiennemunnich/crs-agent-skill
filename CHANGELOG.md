@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **recent-advisories-2026.md** — 2026 CVE/GHSA triage table, release tracks, parser-differential response order (secondary-sourced items marked *verify*)
 - **Evals 11-20** (suite v2.3) — multipart/XML/RCE evasion, chain-rule and PCRE antipatterns, context gating, advisory triage, rule review, OODA loop-back, LTS/engine planning; `tools_used` populated for all evals; `evals/files/rule-diff-review.conf`
 - `string_absent` / `regex_absent` graders; `EVAL_GRADER_MODEL` env override; offline grader tests
+- Grader hardening: negation-aware and code-scoped forbidden-advice checks, whitespace-normalised matching, `critical` assertions, grader errors reported separately from failures, LLM grader retries/temperature 0/head+tail truncation/injection-safe prompt, result metadata (`grader.llm_model`, `grader.spec_sha`)
 
 ### Changed
 

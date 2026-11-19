@@ -813,7 +813,8 @@
           "patterns": [
             "SecRuleEngine Off",
             "SecRequestBodyAccess Off"
-          ]
+          ],
+          "critical": true
         }
       ]
     },
@@ -955,7 +956,8 @@
             "disable 932 entirely",
             "remove all 932",
             "SecRuleRemoveByTag attack-rce"
-          ]
+          ],
+          "critical": true
         }
       ]
     },
@@ -993,7 +995,8 @@
             "set it to 250000",
             "use 250000",
             "250000 is fine"
-          ]
+          ],
+          "critical": true
         },
         {
           "id": "A3",
