@@ -2,7 +2,7 @@
 
 Complete reference for variables used in ModSecurity v3 and Coraza rules.
 
-**Verified against**: ModSecurity v3.0.14 (current fixed line is 3.0.16+; see recent-advisories-2026.md), [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
+**Verified against**: ModSecurity v3.0.14 (current is 3.0.17 (2026-09-29); see recent-advisories-2026.md), [Reference Manual (v3.x)](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)).
 
 ---
 
@@ -38,6 +38,8 @@ Complete reference for variables used in ModSecurity v3 and Coraza rules.
 | `FILES_COMBINED_SIZE` | Total uploaded file size | 2 | Upload size limits |
 | `FILES_TMPNAMES` | Temporary file paths | 2 | Internal use |
 | `MULTIPART_STRICT_ERROR` | Multipart parse error flag | 2 | Malformed multipart detection |
+| `MULTIPART_DUPLICATE_PART_HEADER` | Duplicate header inside a multipart part (3.0.17 / v2 2.9.15+) | 2 | Parser-differential defence (e.g. duplicated `filename`) |
+| `MULTIPART_FILENAME_CHARSET` / `MULTIPART_FILENAME_LANGUAGE` | Charset/language from `filename*=` in Content-Disposition (3.0.17 / v2 2.9.15+) | 2 | RFC 5987 filename evasion |
 
 ## Response Variables
 
@@ -162,3 +164,6 @@ SecRule &ARGS "@gt 10" "id:100002,phase:2,deny,msg:'Too many parameters'"
 - [crs-rule-format.md](crs-rule-format.md) — CRS template showing variable usage
 - [anomaly-scoring.md](anomaly-scoring.md) — TX score variables
 - ModSecurity v3 Reference Manual: https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v3.x)
+
+
+> **Removed in ModSecurity v2 2.9.14:** `REQBODY_PROCESSOR_ERROR` and `REQBODY_PROCESSOR_ERROR_MSG` (deprecated). Use `REQBODY_ERROR` / `REQBODY_ERROR_MSG`.

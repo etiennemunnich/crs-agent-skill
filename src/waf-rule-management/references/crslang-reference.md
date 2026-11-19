@@ -94,7 +94,7 @@ crslang -s input.yaml -o output_dir/
 
 - **Always use crslang first** for syntax validation — `validate_rule.py` does this automatically.
 - Convert rules to YAML for programmatic analysis (counting rules, checking tags, extracting IDs) rather than fragile regex parsing of `.conf` files.
-- Keep the original Seclang as the source of truth; use CRSLang as a tool, not a replacement format (unless the CRS project officially migrates).
+- Keep the original Seclang as the source of truth; use CRSLang as a tool, not a replacement format (upstream has announced CRSLang will replace SecLang in the next major CRS release — until that ships, SecLang stays the source of truth).
 - Pin the crslang binary version in CI for reproducible results.
 - Run `validate_rule.py` (which uses crslang) before `lint_regex.py` and `go-ftw` in every rule workflow.
 

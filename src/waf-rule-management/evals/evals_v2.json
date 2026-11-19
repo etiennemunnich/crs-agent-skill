@@ -1,5 +1,5 @@
 {
-  "version": "2.3",
+  "version": "2.4",
   "skill_name": "waf-rule-management",
   "design_principles": {
     "prompt_style": "All prompts are IMPLICIT — describe the WAF problem, never name scripts or tools. The skill's routing table and Essential Commands must guide the agent to the right tools. This is the A/B signal.",
@@ -685,10 +685,11 @@
       "assertions": [
         {
           "id": "A1",
-          "description": "[Upgrade] Engine upgrade to fixed release (3.0.16+) recommended",
+          "description": "[Upgrade] Engine upgrade to fixed release (3.0.16+, currently 3.0.17) recommended",
           "grading_method": "code",
           "check": "string_match",
           "patterns": [
+            "3.0.17",
             "3.0.16",
             "upgrade",
             "patched version"
@@ -747,7 +748,7 @@
       "id": 12,
       "tier": "hard",
       "name": "xml-attribute-value-bypass",
-      "issue_sources": "CRS GHSA-6jp8-c2w2-x7wr (XML attribute values; secondary source - verify)",
+      "issue_sources": "CRS GHSA-6jp8-c2w2-x7wr (XML attribute values; secondary source - verify); GHSA-6jp8-c2w2-x7wr (fixed 4.28.0 / 4.25.1)",
       "prompt": "We accept SOAP/XML on POST /ws/orders at CRS v4 PL1. A tester put an XSS payload inside an XML attribute value (<item note=\"...\"/>) and nothing fired, while the same payload in element text is blocked. Why, and how should we respond?",
       "measures": "XML body processor scope awareness; attribute targets; upgrade; virtual patch with correct targets.",
       "tools_used": [
@@ -764,7 +765,9 @@
             "XML:/",
             "@*",
             "XPath",
-            "xpath"
+            "xpath",
+            "XML://@*",
+            "crs_xml_attr_inspect"
           ],
           "min_matches": 1
         },
@@ -788,7 +791,10 @@
             "advisory",
             "GHSA",
             "release notes",
-            "latest CRS"
+            "latest CRS",
+            "4.28",
+            "4.25.1",
+            "GHSA-6jp8"
           ],
           "min_matches": 1
         },
@@ -823,8 +829,8 @@
       "tier": "hard",
       "name": "path-based-command-injection-rce",
       "issue_sources": "CRS 4.30.0 / 4.25.2 LTS GHSA-575j-qr6p-9763 (secondary source - verify)",
-      "prompt": "A pentest got command execution past CRS v4.24 at PL1 using absolute binary paths like /usr/bin/id and /???/c?t in a parameter, with no obvious shell keywords. Which rule family is involved, what is the permanent fix, and what interim mitigation can we apply?",
-      "measures": "RCE rule family 932xxx; upgrade to fixed CRS/LTS; interim rule with transforms; PL guidance.",
+      "prompt": "A pentest got command execution past CRS v4.24 at PL1 by putting shell payloads in the URL path (e.g. GET /files/x%3Bid, /usr/bin/id, /???/c?t) instead of a parameter; the same payload in a query argument is blocked. Which rule family is involved, why does it miss the path, what is the permanent fix, and what interim mitigation can we apply?",
+      "measures": "932 RCE targets omitted REQUEST_FILENAME; upgrade to 4.30/4.25.2; interim SecRuleUpdateTargetById (config-time, after CRS include) or custom rule.",
       "tools_used": [
         "lint_regex.py",
         "validate_rule.py"
@@ -855,12 +861,13 @@
         },
         {
           "id": "A3",
-          "description": "[Interim] Interim custom rule uses transformations and custom ID range",
+          "description": "[Interim] Adds REQUEST_FILENAME target to 932 rules or writes a custom rule in the 100000-199999 range",
           "grading_method": "code",
           "check": "string_match",
           "patterns": [
+            "SecRuleUpdateTargetById",
+            "REQUEST_FILENAME",
             "t:urlDecodeUni",
-            "t:lowercase",
             "t:normalizePath",
             "id:1"
           ],
@@ -884,6 +891,18 @@
           "description": "[PL] Considers paranoia level / FP impact",
           "grading_method": "llm",
           "rubric": "Score 'correct' if the response discusses paranoia level placement or false-positive trade-off, or recommends testing impact. 'incorrect' otherwise."
+        },
+        {
+          "id": "A6",
+          "description": "[Root cause] Names REQUEST_FILENAME / URL path as the missing target",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "REQUEST_FILENAME",
+            "URL path",
+            "path segment"
+          ],
+          "min_matches": 1
         }
       ]
     },
@@ -1367,7 +1386,10 @@
           "patterns": [
             "ModSecurity v3",
             "libmodsecurity",
-            "Coraza"
+            "Coraza",
+            "Nginx",
+            "Apache",
+            "unsupported"
           ],
           "min_matches": 1
         },
@@ -1382,7 +1404,12 @@
             "plugin",
             "anomaly",
             "REQUEST-903",
-            "SecWebAppID"
+            "SecWebAppID",
+            "SecCollectionTimeout",
+            "before.conf",
+            "Include",
+            "900990",
+            "tx.crs_setup_version"
           ],
           "min_matches": 2
         },
@@ -1398,6 +1425,156 @@
             "regression"
           ],
           "min_matches": 1
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "tier": "hard",
+      "name": "crs-430-removed-response-rule-ids",
+      "issue_sources": "CRS 4.30.0 release notes (rules 950010-956010 replaced by 950020; 950022 added)",
+      "prompt": "After upgrading from CRS 4.28 to 4.30 our startup log is clean but response-body false positives came back, and our exclusion file still has SecRuleRemoveById 951010 and 953010 to skip compressed responses. We also set tx.crs_skip_response_analysis=1 to turn response inspection off. What changed and what should we do?",
+      "measures": "Knows 4.30 consolidated per-file compression rules into 950020, added 950022, changed skip_response_analysis semantics; updates exclusions; keeps LTS difference in mind.",
+      "tools_used": [
+        "validate_exclusion.py",
+        "analyze_log.py"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Config] Old compression rule IDs replaced by 950020",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "950020"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Config] New 950022 / skip_response_analysis now covers phase 4 bodies",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "950022",
+            "crs_skip_response_analysis",
+            "phase 4",
+            "response bod"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A3",
+          "description": "[Config] Update or remove exclusions that reference removed IDs",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "update",
+            "remove",
+            "replace",
+            "no longer exist",
+            "removed"
+          ],
+          "min_matches": 2
+        },
+        {
+          "id": "A4",
+          "description": "[Test] Re-test after exclusion change",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "go-ftw",
+            "DetectionOnly",
+            "regression",
+            "test"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Rigor] Does not assume the same IDs on the 4.25 LTS line",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response either notes that the 4.25.x LTS line keeps the per-file compression rules (950010-956010) while 4.30 uses 950020, or tells the user to check the rule IDs present in their installed release before editing exclusions. Score 'incorrect' if it presents the new IDs as universal across all 4.x releases."
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "tier": "hard",
+      "name": "advisory-workaround-engine-version-trap",
+      "issue_sources": "ModSecurity 2.9.14 (#3592); CRS 4.28.0 / 4.25.1 advisory GHSA-6jp8-c2w2-x7wr",
+      "prompt": "Our CRS 4.25 LTS deployment on Apache with ModSecurity v2 broke XML clients after the latest point release because attribute values are now inspected. The release notes say there is a runtime opt-out variable, we set it, and nothing changed. How do we diagnose this and what are our options?",
+      "measures": "LTS gate tx.crs_xml_attr_inspect (id 900130), ModSecurity v2 < 2.9.14 ctl:ruleRemoveTargetByTag bug, config-time SecRuleUpdateTargetByTag fallback, upgrade engine; does not just disable XML inspection.",
+      "tools_used": [
+        "validate_exclusion.py",
+        "analyze_log.py"
+      ],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Config] Names the gate variable",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "crs_xml_attr_inspect",
+            "900130"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Engine] ModSecurity v2 version needed (2.9.14+)",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "2.9.14",
+            "2.9.15",
+            "upgrade ModSecurity",
+            "update ModSecurity"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Fallback] Config-time SecRuleUpdateTargetByTag with !XML://@*",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "SecRuleUpdateTargetByTag",
+            "!XML://@*"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A4",
+          "description": "[Placement] Config-time directives go after the CRS include",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "after the CRS",
+            "after CRS",
+            "after the include",
+            "after the rules"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A5",
+          "description": "[Bad advice] Does not recommend turning off request body inspection",
+          "grading_method": "code",
+          "check": "string_absent",
+          "patterns": [
+            "SecRequestBodyAccess Off",
+            "SecRuleEngine Off",
+            "disable XML inspection entirely"
+          ],
+          "critical": true
+        },
+        {
+          "id": "A6",
+          "description": "[Judgement] Prefers fixing the false positives over disabling the protection",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response treats disabling attribute inspection as a temporary, scoped measure (specific rules/endpoints) while the application's false positives are fixed, and prefers upgrading the engine so the supported opt-out works. Score 'incorrect' if it recommends permanently disabling XML attribute inspection globally."
         }
       ]
     }

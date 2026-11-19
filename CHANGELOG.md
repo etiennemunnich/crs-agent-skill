@@ -19,6 +19,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Upstream verification pass (2026-11)** against coreruleset.org release posts, CRS `CHANGES.md`, ModSecurity v2/v3 `CHANGES`, go-ftw changelog and the CRS docs: `recent-advisories-2026.md` rewritten with primary-sourced IDs, severities, fixed versions and workarounds (adds GHSA-f5qm-3h4p-8qhg ReDoS-as-bypass, XML attribute LTS gate, ModSecurity 3.0.17 / 2.9.15, go-ftw 2.6.2, LTS policy, 3.3.x EOL, engine support matrix, 4.30 removed response-rule IDs); corrected the CVE-2026-33691 fix version (4.25.0), charset rule IDs (920480/922100) and the 4.30 REQUEST_FILENAME workaround
+- Fixed `tx.blocking_early` → `tx.early_blocking`; documented upstream rule-ID allocation vs this skill's 100000+ convention; noted the upstream docs' stale `tx.paranoia_level`; added new multipart variables and the v2 `REQBODY_PROCESSOR_ERROR` removal; CRSLang upstream direction
+- Evals 13 (path-based RCE prompt fixed to match the advisory), 11, 12, 20 updated; new evals 21–22 (suite v2.4)
+
 - Version notes in references updated (ModSecurity 3.0.16+ current); SKILL.md routing row for new advisories
 
 ---

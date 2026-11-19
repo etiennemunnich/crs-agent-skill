@@ -190,7 +190,7 @@ grep -E "^\s*SecRule" REQUEST-942-APPLICATION-ATTACK-SQLI.conf | wc -l
 | `tx.inbound_anomaly_score_threshold` | Inbound block threshold | 5 |
 | `tx.outbound_anomaly_score_threshold` | Outbound block threshold | 4 |
 | `tx.critical_anomaly_score` | Score for CRITICAL severity | 5 |
-| `tx.blocking_early` | Enable early blocking (after phase 1/3) | 0 |
+| `tx.early_blocking` | Enable early blocking (after phase 1/3) | 0 |
 
 ---
 

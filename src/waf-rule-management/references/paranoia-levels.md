@@ -112,3 +112,6 @@ grep 'paranoia-level/2' audit.log | grep -oE 'id "([0-9]+)"' | sort | uniq -c | 
 - [false-positives-and-tuning.md](false-positives-and-tuning.md) — Exclusion strategies
 - [modsec-directives.md](modsec-directives.md) — Engine configuration
 - CRS Paranoia Levels docs: https://coreruleset.org/docs/2-how-crs-works/2-2-paranoia_levels/
+
+
+> **Doc inconsistency upstream:** the coreruleset.org *Paranoia Levels* page still says to set `tx.paranoia_level` in rule 900000. In current CRS 4 `crs-setup.conf.example` the variables are `tx.blocking_paranoia_level` (rule 900000) and `tx.detection_paranoia_level` (rule 900001). Use those; `tx.paranoia_level` is the legacy name.

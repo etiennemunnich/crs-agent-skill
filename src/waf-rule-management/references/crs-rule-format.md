@@ -112,6 +112,8 @@ Use this for steering during triage and tuning.
 | 100000–199999 | Custom rules (per-incident, auto-allocated by `new_incident.sh`) |
 | 200000–299999 | Custom rules (alternative range) |
 
+> **Upstream allocation differs.** The ModSecurity/CRS documentation reserves **1–99,999 for local (internal) use**, lists 100,000–199,999 as Oracle, 200,000–299,999 as Comodo, and 900,000–999,999 for CRS. This skill defaults to 100000–199999 (custom) and 200000–299999 (OpenAPI-derived) so generated IDs never touch CRS or CRS plugins; those vendor ranges are unused in practice. If you want to follow upstream strictly, run `lint_crs_rule.py --id-range 1-99999` and pass a matching base to `new_incident.sh` / `openapi_to_rules.py`. Never use 900000–999999 and avoid IDs that CRS plugins use (check installed plugin `*-config.conf`).
+
 ---
 
 ## Chained Rules
