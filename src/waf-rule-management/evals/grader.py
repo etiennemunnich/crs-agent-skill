@@ -452,6 +452,10 @@ ASSERTION_ROUTING_MAP = {
         "A1": {"commands": ["openapi_to_rules.py"], "routing": "Essential Commands → openapi_to_rules.py"},
         "A2": {"commands": ["validate_rule.py"], "routing": "Essential Commands → validate_rule.py"},
     },
+    23: {
+        "A1": {"references": ["false-positives-and-tuning.md"], "routing": "Configuration context: establish installed versions"},
+        "A2": {"references": ["known-version-issues.md"], "routing": "SKILL.md → Versions and Freshness (primary sources)"},
+    },
     10: {
         "A5": {
             "references": ["crs-v3-v4-exception-migration.md", "go-ftw-reference.md", "upgrade-and-testing.md"],

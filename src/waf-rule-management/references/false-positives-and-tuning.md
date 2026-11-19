@@ -5,7 +5,7 @@ Goal: reduce false positives while preserving detection depth.
 
 **Steering scope**: This reference describes mechanisms, process, and decision frameworks — not issue-specific examples. For concrete cases (e.g. a given CRS issue), use the process here and check CRS issues / user-provided context.
 
-**Verified against** (2026-02-15):
+**Sources**:
 - https://coreruleset.org/docs/2-how-crs-works/2-3-false-positives-and-tuning/
 - https://coreruleset.org/docs/4-about-plugins/4-1-plugins/
 
@@ -26,7 +26,7 @@ Before analyzing or writing any exclusion, collect the following. Without this c
 |-------|----------------|
 | **Paranoia level** | `blocking_paranoia_level` and `detection_paranoia_level` from `crs-setup.conf` |
 | **Engine + version** | ModSecurity v2/v3 or Coraza; WAF host (Apache, Nginx, Caddy) |
-| **CRS version** | e.g. `4.0.0`, `4.19.0` |
+| **CRS version** | Exact installed release (from the `ver:` action in the rules or the audit log), not "latest" |
 | **Application / platform** | WordPress, NextJS, PrestaShop, Payload CMS, custom API, etc. |
 | **Triggering payload** | URI, HTTP method, relevant headers, body snippet, or cookie value that caused the match |
 | **Rule ID + matched variable** | From the audit or error log (e.g. `id:933150`, matched on `REQUEST_COOKIES:session-token`) |

@@ -4,7 +4,7 @@ Ensures WAF rules are **effective** (detect attacks), **performant** (no ReDoS, 
 
 **Core principle**: Prefer `@pm`/`@streq`/`@beginsWith`/`@contains` when they suffice — faster and no ReDoS risk. Use `@rx` only when pattern structure is needed.
 
-**Verified against**: ModSecurity v3.0.14 (current is 3.0.17 (2026-09-29); see recent-advisories-2026.md), Coraza v3.3.3, CRS v4.23.0 (re-check against the installed release).
+**Applies to**: ModSecurity v2/v3 (PCRE2) and Coraza (RE2). Version-specific regex issues: [known-version-issues.md](known-version-issues.md).
 
 ---
 
@@ -269,4 +269,4 @@ regex101.com, regexr.com — use for structure/debug. PCRE flavor differs from P
 - PCRE2 docs: https://www.pcre.org/current/doc/html/
 
 
-> **ReDoS is also a bypass.** When PCRE2 exceeds its backtracking limit, `@rx` returns an error rather than a match, so the rule does not evaluate and the payload is not inspected (see rule 200004 / `MSC_PCRE_LIMITS_EXCEEDED` and `recent-advisories-2026.md`, GHSA-f5qm-3h4p-8qhg). Treat PCRE limit hits on security rules as potential detection gaps, not just performance noise.
+> **ReDoS is also a bypass.** When PCRE2 exceeds its backtracking limit, `@rx` returns an error rather than a match, so the rule does not evaluate and the payload is not inspected (see rule 200004 / `MSC_PCRE_LIMITS_EXCEEDED` and `known-version-issues.md`, GHSA-f5qm-3h4p-8qhg). Treat PCRE limit hits on security rules as potential detection gaps, not just performance noise.

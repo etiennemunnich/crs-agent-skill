@@ -2,7 +2,7 @@
 
 CRS paranoia levels control detection aggressiveness. Higher levels activate more rules, catching more attacks but generating more false positives.
 
-**Verified against**: CRS v4.23.0, https://coreruleset.org/docs/2-how-crs-works/2-2-paranoia_levels/.
+**Source**: https://coreruleset.org/docs/2-how-crs-works/2-2-paranoia_levels/ (CRS v4).
 
 ---
 

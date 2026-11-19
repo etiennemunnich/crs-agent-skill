@@ -200,8 +200,8 @@ MCP configuration file. Consult your client's documentation for the config path.
 
 ---
 
-## Verified Against
+## Sources
 
-- Chrome DevTools MCP v0.17.0 (Feb 2026) — <https://github.com/ChromeDevTools/chrome-devtools-mcp>
-- Context7 MCP (Feb 2026) — <https://context7.com>
-- Context7 library IDs verified Feb 2026 via context7.com
+- Chrome DevTools MCP — <https://github.com/ChromeDevTools/chrome-devtools-mcp>
+- Context7 MCP — <https://context7.com>
+- Context7 library IDs can change; resolve them at use time rather than trusting the IDs listed here

@@ -18,7 +18,7 @@ Returns matched rule IDs and descriptions. Without `x-format-output`, the full W
 |--------|--------|---------|
 | `x-backend` | `apache`, `nginx`, `coraza-caddy` | apache |
 | `x-crs-paranoia-level` | 1–4 | 1 |
-| `x-crs-version` | e.g. 4.20.0, or omit for latest | latest |
+| `x-crs-version` | A specific release (use the one you run), or omit for latest | latest |
 | `x-format-output` | `txt-matched-rules`, `json-matched-rules`, `csv-matched-rules`, `txt-matched-rules-extended` | full audit log |
 
 Header names are case-insensitive.
@@ -47,7 +47,7 @@ curl -H "x-format-output: json-matched-rules" \
      "https://sandbox.coreruleset.org/?file=/etc/passwd" | jq .
 
 # Specific CRS version
-curl -H "x-crs-version: 4.20.0" \
+curl -H "x-crs-version: <installed-version>" \
      -H "x-format-output: txt-matched-rules" \
      "https://sandbox.coreruleset.org/PAYLOAD"
 ```
@@ -69,7 +69,7 @@ CRS asks that you **test your curl against the Sandbox** before submitting. See 
 curl --request GET --include --silent --show-error \
   -H "x-backend: nginx" \
   -H "x-crs-paranoia-level: 2" \
-  -H "x-crs-version: 4.20.0" \
+  -H "x-crs-version: <installed-version>" \
   -H "x-format-output: json-matched-rules" \
   "https://sandbox.coreruleset.org/?q=<script>alert(1)</script>" \
   -o sandbox-get.out

@@ -1,7 +1,7 @@
 # go-ftw Reference (v2)
 
 go-ftw is the primary regression test runner for CRS-style WAF testing.
-Verified against: **go-ftw v2.0.0** (Jan 2026); latest is **v2.6.2** (2026-10-26) — 2.6.0 adds `--threshold` and multiple `--rule` to quantitative runs, 2.6.1 rejects raw CR/LF in header values and 2.6.0 fails (instead of skipping) on unparseable test files, so fix test YAML that was previously ignored.
+Covers the **go-ftw v2** test format. Version-specific behaviour: `--threshold` and multiple `--rule` in quantitative runs need 2.6.0+; from 2.6.0 an unparseable test file fails the run instead of being skipped; from 2.6.1 raw CR/LF in header values is rejected.
 
 - GitHub: <https://github.com/coreruleset/go-ftw>
 - Baseline tools: [baseline-testing-tools.md](baseline-testing-tools.md) — go-test-waf, nuclei

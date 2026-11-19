@@ -1,5 +1,5 @@
 {
-  "version": "2.4",
+  "version": "2.5",
   "skill_name": "waf-rule-management",
   "design_principles": {
     "prompt_style": "All prompts are IMPLICIT — describe the WAF problem, never name scripts or tools. The skill's routing table and Essential Commands must guide the agent to the right tools. This is the A/B signal.",
@@ -685,11 +685,10 @@
       "assertions": [
         {
           "id": "A1",
-          "description": "[Upgrade] Engine upgrade to fixed release (3.0.16+, currently 3.0.17) recommended",
+          "description": "[Upgrade] Engine upgrade past the fixed release (3.0.16) recommended",
           "grading_method": "code",
           "check": "string_match",
           "patterns": [
-            "3.0.17",
             "3.0.16",
             "upgrade",
             "patched version"
@@ -1523,12 +1522,11 @@
         },
         {
           "id": "A2",
-          "description": "[Engine] ModSecurity v2 version needed (2.9.14+)",
+          "description": "[Engine] ModSecurity v2 fix version (2.9.14) or engine upgrade",
           "grading_method": "code",
           "check": "string_match",
           "patterns": [
             "2.9.14",
-            "2.9.15",
             "upgrade ModSecurity",
             "update ModSecurity"
           ],
@@ -1575,6 +1573,62 @@
           "description": "[Judgement] Prefers fixing the false positives over disabling the protection",
           "grading_method": "llm",
           "rubric": "Score 'correct' if the response treats disabling attribute inspection as a temporary, scoped measure (specific rules/endpoints) while the application's false positives are fixed, and prefers upgrading the engine so the supported opt-out works. Score 'incorrect' if it recommends permanently disabling XML attribute inspection globally."
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "tier": "medium",
+      "name": "no-stale-version-claims",
+      "issue_sources": "Skill policy: versions only when tied to a specific issue; look up what is current",
+      "prompt": "Quick one: what's the latest CRS and ModSecurity release, and are we up to date? We installed everything sometime last year on Nginx.",
+      "measures": "Does not assert a 'latest' version from memory; establishes the installed versions; points to or checks primary sources; ties any version it names to a specific fix.",
+      "tools_used": [],
+      "assertions": [
+        {
+          "id": "A1",
+          "description": "[Config] Establishes what is installed",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "ver:",
+            "OWASP_CRS/",
+            "which version",
+            "what version",
+            "installed version",
+            "version you",
+            "nginx -V",
+            "image tag"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A2",
+          "description": "[Freshness] Points to or checks a primary source",
+          "grading_method": "code",
+          "check": "string_match",
+          "patterns": [
+            "CHANGES",
+            "releases",
+            "coreruleset.org",
+            "security/advisories",
+            "release notes",
+            "changelog"
+          ],
+          "min_matches": 1
+        },
+        {
+          "id": "A3",
+          "description": "[Freshness] Does not assert a latest version without a source",
+          "grading_method": "llm",
+          "critical": true,
+          "rubric": "Score 'incorrect' if the response states a specific version number as the latest/current CRS or ModSecurity release as plain fact with no indication it was just looked up from a named source and no caveat that it must be checked. Score 'correct' if it either looks the version up and cites the source, or declines to name a latest version and tells the user where to check. Naming a version only as the release that fixed a specific issue is fine."
+        },
+        {
+          "id": "A4",
+          "description": "[Judgement] Explains why being current matters with a concrete issue or next step",
+          "grading_method": "llm",
+          "rubric": "Score 'correct' if the response gives a concrete next step for deciding whether to upgrade (compare the installed version against fixed-in versions of known advisories, or check the LTS/support status of the installed line) and recommends testing before upgrading production. Score 'incorrect' if it only says 'upgrade to the latest'."
         }
       ]
     }

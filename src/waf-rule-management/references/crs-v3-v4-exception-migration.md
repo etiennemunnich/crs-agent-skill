@@ -72,7 +72,7 @@ SecRule REMOTE_ADDR "@ipMatch 127.0.0.1,::1" \
     pass,\
     t:none,\
     nolog,\
-    ver:'OWASP_CRS/3.3.9',\
+    ver:'OWASP_CRS/3.3.x',\
     chain"
     SecRule REQUEST_HEADERS:User-Agent "@endsWith (internal dummy connection)" \
         "t:none,\
@@ -89,7 +89,7 @@ SecRule REMOTE_ADDR "@ipMatch 127.0.0.1,::1" \
     pass,\
     t:none,\
     nolog,\
-    ver:'OWASP_CRS/4.25.0',\
+    ver:'OWASP_CRS/<installed version>',\
     chain"
     SecRule REQUEST_HEADERS:User-Agent "@endsWith (internal dummy connection)" \
         "t:none,\
@@ -116,7 +116,7 @@ If `ctl:ruleEngine=Off` appears in a **non-chained** rule, replace it with `ctl:
 ver:'OWASP_CRS/3.3.x'  →  ver:'OWASP_CRS/<YOUR_V4_LTS>'
 ```
 
-The upstream gist used **`4.25.0`** as an example target. **Confirm** the correct string for your deployment from [Coreruleset releases](https://github.com/coreruleset/coreruleset/releases). Add `# MIGRATED: version updated`.
+Use the release you are migrating to. **Confirm** the correct string for your deployment from [Coreruleset releases](https://github.com/coreruleset/coreruleset/releases). Add `# MIGRATED: version updated`.
 
 ---
 

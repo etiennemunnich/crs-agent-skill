@@ -12,12 +12,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **recent-advisories-2026.md** — 2026 CVE/GHSA triage table, release tracks, parser-differential response order (secondary-sourced items marked *verify*)
+- **known-version-issues.md** (first added as `recent-advisories-2026.md`) — advisories and version-specific issues with fixed-in versions and workarounds; parser-differential response order
 - **Evals 11-20** (suite v2.3) — multipart/XML/RCE evasion, chain-rule and PCRE antipatterns, context gating, advisory triage, rule review, OODA loop-back, LTS/engine planning; `tools_used` populated for all evals; `evals/files/rule-diff-review.conf`
 - `string_absent` / `regex_absent` graders; `EVAL_GRADER_MODEL` env override; offline grader tests
 - Grader hardening: negation-aware and code-scoped forbidden-advice checks, whitespace-normalised matching, `critical` assertions, grader errors reported separately from failures, LLM grader retries/temperature 0/head+tail truncation/injection-safe prompt, result metadata (`grader.llm_model`, `grader.spec_sha`)
 
 ### Changed
+
+- **Versions policy**: the skill now names a version only when something specific is tied to it (fixed in, removed in, broken before). Removed all "Verified against …" / "latest is …" lines and the release-track snapshot; `SKILL.md` gains a *Versions and Freshness* section listing the primary sources to check and the fallback when they are unreachable. `recent-advisories-2026.md` renamed to **`known-version-issues.md`** and rewritten as issue → fixed-in tables. Guardrail test `test_no_floating_versions.py`; eval 23 (suite v2.5)
 
 - **Upstream verification pass (2026-11)** against coreruleset.org release posts, CRS `CHANGES.md`, ModSecurity v2/v3 `CHANGES`, go-ftw changelog and the CRS docs: `recent-advisories-2026.md` rewritten with primary-sourced IDs, severities, fixed versions and workarounds (adds GHSA-f5qm-3h4p-8qhg ReDoS-as-bypass, XML attribute LTS gate, ModSecurity 3.0.17 / 2.9.15, go-ftw 2.6.2, LTS policy, 3.3.x EOL, engine support matrix, 4.30 removed response-rule IDs); corrected the CVE-2026-33691 fix version (4.25.0), charset rule IDs (920480/922100) and the 4.30 REQUEST_FILENAME workaround
 - Fixed `tx.blocking_early` → `tx.early_blocking`; documented upstream rule-ID allocation vs this skill's 100000+ convention; noted the upstream docs' stale `tx.paranoia_level`; added new multipart variables and the v2 `REQBODY_PROCESSOR_ERROR` removal; CRSLang upstream direction

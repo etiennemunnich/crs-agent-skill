@@ -2,7 +2,7 @@
 
 CRS uses `.ra` (regex assembly) files to build complex, maintainable regexes via [crs-toolchain](crs-toolchain-reference.md). This separates human-readable pattern components from the optimized PCRE output.
 
-**Verified against**: crs-toolchain v2.7.0, CRS v4.23.0.
+**Applies to**: crs-toolchain v2 with CRS v4.
 
 ---
 

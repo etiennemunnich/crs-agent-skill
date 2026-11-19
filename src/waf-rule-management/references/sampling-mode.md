@@ -2,7 +2,7 @@
 
 Deploy CRS progressively by applying rules to a percentage of traffic, monitoring at each stage, and tuning before increasing coverage.
 
-**Verified against**: CRS v4.23.0, ModSecurity v3.0.14 (Feb 2025).
+**Applies to**: CRS v4 on ModSecurity or Coraza.
 
 ---
 

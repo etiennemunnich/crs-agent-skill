@@ -2,7 +2,7 @@
 
 Style and formatting requirements for writing CRS-compatible rules, whether for contribution upstream or for consistent custom rules. Rules must be **effective** (detect) and **performant** (prefer `@pm` over `@rx`, no ReDoS). See [regex-steering-guide.md](regex-steering-guide.md) for operator choice and ReDoS prevention.
 
-**Verified against**: CRS v4.23.0, https://coreruleset.org/docs/development/.
+**Source**: https://coreruleset.org/docs/development/ (CRS v4).
 
 ---
 

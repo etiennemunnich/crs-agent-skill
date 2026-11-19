@@ -2,7 +2,7 @@
 
 **Purpose**: Agent steering for tuning and managing OWASP CRS for a given version. Use when the user needs to understand how CRS rules work, which groups inspect what, request vs response flow, phase order, and version-aware tuning. Covers rule structure, file layout, and practical triage shortcuts.
 
-**Target**: CRS v4.x. Verified against CRS v4.23.0–4.24.0, https://coreruleset.org/docs/2-how-crs-works/.
+**Target**: CRS v4.x. Source: https://coreruleset.org/docs/2-how-crs-works/.
 
 ---
 
